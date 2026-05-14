@@ -17,3 +17,14 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::get('/test', function () {
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Car Rental API is working!',
+        'data' => [
+            'app' => 'Car Rental',
+            'version' => '1.0.0',
+        ]
+    ]);
+});
