@@ -13,13 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->string('password');
-            $table->enum('role', ['admin','manager','employee']);
-            $table->foreignId('agency_id')->constrained()->cascadeOnDelete();
+        Schema::create('insurances', function (Blueprint $table) {
+           $table->id();
+            $table->foreignId('car_id')->constrained()->cascadeOnDelete();
+            $table->string('company');
+            $table->decimal('price', 10, 2);
+            $table->date('start_date');
+            $table->date('end_date');
             $table->timestamps();
         });
     }
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('insurances');
     }
 };

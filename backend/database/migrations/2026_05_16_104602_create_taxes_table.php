@@ -13,13 +13,15 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->string('password');
-            $table->enum('role', ['admin','manager','employee']);
-            $table->foreignId('agency_id')->constrained()->cascadeOnDelete();
+        Schema::create('taxes', function (Blueprint $table) {
+             $table->id();
+            $table->foreignId('car_id')->constrained()->cascadeOnDelete();
+            $table->integer('year');
+            $table->decimal('amount', 10, 2);
+            $table->date('due_date');
+            $table->boolean('paid')->default(false);
+
+            $table->unique(['car_id', 'year']);
             $table->timestamps();
         });
     }
@@ -31,6 +33,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('taxes');
     }
 };

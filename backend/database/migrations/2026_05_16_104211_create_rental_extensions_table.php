@@ -13,13 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('rental_extensions', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->string('password');
-            $table->enum('role', ['admin','manager','employee']);
-            $table->foreignId('agency_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('rental_id')->constrained()->cascadeOnDelete();
+            $table->date('old_end_date');
+            $table->date('new_end_date');
             $table->timestamps();
         });
     }
@@ -31,6 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('rental_extensions');
     }
 };
