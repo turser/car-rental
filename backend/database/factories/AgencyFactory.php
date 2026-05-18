@@ -17,7 +17,7 @@ class AgencyFactory extends Factory
     public function definition()
     {
         return [
-            //
+            
         ];
     }
 }
