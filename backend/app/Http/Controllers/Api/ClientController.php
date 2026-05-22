@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Client;
 use Illuminate\Http\Request;
 
 class ClientController extends Controller
@@ -14,7 +15,16 @@ class ClientController extends Controller
      */
     public function index()
     {
-        //
+        $cars = Client::with([
+            'images',
+            'insurances',
+            'maintenances',
+            'taxes'
+         ])
+         ->where(
+            'agency_id',
+            auth()->user()->agency_id
+        )->get();
     }
 
     /**
