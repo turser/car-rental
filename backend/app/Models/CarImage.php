@@ -8,6 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class CarImage extends Model
 {
     use HasFactory;
+    protected $fillable = [
+    'car_id',
+    'path',
+    'is_primary'
+];
 
     public function cars()
 {
