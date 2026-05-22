@@ -98,10 +98,21 @@ class CarController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Car $car)
     {
-        //
-    }
+// Same agency check
+        if ( $car->agency_id != auth()->user()->agency_id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+        $car->load([
+            'images',
+            'insurances',
+            'maintenances',
+            'taxes',
+            'rentals'
+        ]);
+
+        return response()->json($car);    }
 
     /**
      * Update the specified resource in storage.
