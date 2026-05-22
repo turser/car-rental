@@ -15,7 +15,13 @@ class CarController extends Controller
      */
     public function index()
     {
-         $cars = Car::where(
+         $cars = Car::with([
+            'images',
+            'insurances',
+            'maintenances',
+            'taxes'
+         ])
+         ->where(
             'agency_id',
             auth()->user()->agency_id
         )->get();
