@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CarController;
+use App\Http\Controllers\Api\ClientController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -32,6 +34,9 @@ Route::get('/test', function () {
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('cars', CarController::class);
+
+    Route::apiResource('clients', ClientController::class);
 
     Route::post('/logout', [AuthController::class, 'logout']);
 
