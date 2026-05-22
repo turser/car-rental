@@ -73,7 +73,7 @@ class CarController extends Controller
         ->store('cars', 'public');
 
         $car->images()->create([
-        'path' => $primaryPath,
+        'image_path' => $primaryPath,
         'is_primary' => true
     ]);
 
@@ -81,7 +81,7 @@ class CarController extends Controller
         foreach ($request->file('images') as $image) {
             $path = $image->store('cars', 'public');
             $car->images()->create([
-                'path' => $path,
+                'image_path' => $path,
                 'is_primary' => false
             ]);
         }

@@ -10,7 +10,7 @@ class CarImage extends Model
     use HasFactory;
     protected $fillable = [
     'car_id',
-    'path',
+    'image_path',
     'is_primary'
 ];
 
