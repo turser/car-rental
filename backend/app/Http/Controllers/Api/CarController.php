@@ -38,7 +38,27 @@ class CarController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        if (auth()->user()->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }   
+        $validated = $request->validate([
+            'brand' => 'required',
+            'model' => 'required',
+            'registration_number' => 'required|unique:cars',
+            'purchase_date' => 'required|date',
+            'purchase_price' => 'nullable|numeric',
+            'mileage' => 'required|integer',
+            'daily_price' => 'required|numeric',
+            'fuel_type' => 'required',
+        ]); 
+
+        $validated['agency_id'] = auth()->user()->agency_id;
+
+        $validated['status'] = 'available';
+
+        $car = Car::create($validated);
+
+        return response()->json($car->id, 201);
     }
 
     /**

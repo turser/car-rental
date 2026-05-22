@@ -8,6 +8,18 @@ use Illuminate\Database\Eloquent\Model;
 class Car extends Model
 {
     use HasFactory;
+    protected $fillable = [
+    'brand',
+    'model',
+    'registration_number',
+    'purchase_date',
+    'purchase_price',
+    'mileage',
+    'daily_price',
+    'status',
+    'fuel_type',
+    'agency_id'
+];
     public function images()
 {
     return $this->hasMany(CarImage::class);
