@@ -8,4 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class CarImage extends Model
 {
     use HasFactory;
+
+    public function cars()
+{
+    return $this->belongsTo(CarImage::class);
+}
 }
