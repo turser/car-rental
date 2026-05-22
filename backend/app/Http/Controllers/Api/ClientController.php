@@ -15,16 +15,7 @@ class ClientController extends Controller
      */
     public function index()
     {
-        $cars = Client::with([
-            'images',
-            'insurances',
-            'maintenances',
-            'taxes'
-         ])
-         ->where(
-            'agency_id',
-            auth()->user()->agency_id
-        )->get();
+        
     }
 
     /**
@@ -44,9 +35,9 @@ class ClientController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+   public function show(Client $client)
     {
-        //
+        return response()->json($client);
     }
 
     /**
