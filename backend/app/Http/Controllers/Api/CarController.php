@@ -42,23 +42,54 @@ class CarController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }   
         $validated = $request->validate([
-            'brand' => 'required',
-            'model' => 'required',
-            'registration_number' => 'required|unique:cars',
-            'purchase_date' => 'required|date',
-            'purchase_price' => 'nullable|numeric',
-            'mileage' => 'required|integer',
-            'daily_price' => 'required|numeric',
-            'fuel_type' => 'required',
-        ]); 
 
-        $validated['agency_id'] = auth()->user()->agency_id;
+        'brand' => 'required',
+        'model' => 'required',
+        'plateNumber' => 'required|unique:cars,registration_number',
+        'purchaseDate' => 'required|date',
+        'purchasePrice' => 'nullable|numeric',
+        'mileage' => 'required|integer',
+        'dailyPrice' => 'required|numeric',
+        'fuelType' => 'required',
 
-        $validated['status'] = 'available';
+        'primaryImage' => 'required|image',
+        'images.*' => 'image'
+    ]);
+    $car = Car::create([
+    'brand' => $validated['brand'],
+    'model' => $validated['model'],
+    'registration_number' => $validated['plateNumber'],
+    'purchase_date' => $validated['purchaseDate'],
+    'purchase_price' => $validated['purchasePrice'] ?? null,
+    'mileage' => $validated['mileage'],
+    'daily_price' => $validated['dailyPrice'],
+    'fuel_type' => $validated['fuelType'],
+    'agency_id' => auth()->user()->agency_id,
+    'status' => 'available'
+    ]);
 
-        $car = Car::create($validated);
+    $primaryPath = $request
+        ->file('primaryImage')
+        ->store('cars', 'public');
 
-        return response()->json($car->id, 201);
+        $car->images()->create([
+        'path' => $primaryPath,
+        'is_primary' => true
+    ]);
+
+     if ($request->hasFile('images')) {
+        foreach ($request->file('images') as $image) {
+            $path = $image->store('cars', 'public');
+            $car->images()->create([
+                'path' => $path,
+                'is_primary' => false
+            ]);
+        }
+    }
+    return response()->json([
+        'message' => 'Car created',
+        'car' => $car->load('images')
+    ]);
     }
 
     /**
