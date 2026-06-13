@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Client extends Model
 {
-    use HasFactory;
+    use HasFactory , LogsActivity;
     protected $fillable = [
     'full_name',
     'cin',
@@ -17,4 +19,15 @@ class Client extends Model
     'email',
     'address'
 ];
+public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable() 
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();  
+    }
+public function rentals()
+{
+    return $this->hasMany(Rental::class);
+}
 }
