@@ -3,6 +3,8 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CarController;
 use App\Http\Controllers\Api\ClientController;
+use App\Http\Controllers\Api\ServiceController;
+use App\Http\Controllers\Api\InsuranceController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -33,6 +35,7 @@ Route::get('/test', function () {
 });
 Route::post('/login', [AuthController::class, 'login']);
 
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('cars', CarController::class);
 
@@ -41,5 +44,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::get('/me', [AuthController::class, 'me']);
+
+    Route::apiResource('insurances',InsuranceController::class);
+
+    Route::apiResource('services', ServiceController::class);
 
 });
