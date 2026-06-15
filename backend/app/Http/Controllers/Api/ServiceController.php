@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Service;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ServiceController extends Controller
@@ -13,9 +14,19 @@ class ServiceController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+
+    public function index(): JsonResponse
     {
-        //
+        $Service = Service::latest()->get()->map(function ($service) {
+            return [
+                'id' => $service->id,
+                'serviceName' => $service->name,
+                'priceType' => $service->price_type,
+                'price' => $service->price,
+            ];
+        });
+
+        return response()->json($Service);
     }
 
     /**
@@ -24,27 +35,24 @@ class ServiceController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-        'nom'       => 'required|string|max:255',
-        'type_prix' => 'required|in:fixed,per_km,per_day', // Les valeurs de l'enum de la DB
-        'tarif'     => 'required|numeric|min:0',
-    ]);
+            'serviceName' => 'required|string|max:255',
+            'priceType' => 'required|in:fixed,per_km,per_day',
+            'price' => 'required|numeric|min:0',
+        ]);
 
-    // 2. Mapping et création de l'enregistrement dans la base de données
-    $service = Service::create([
-        'name'       => $validated['nom'],
-        'price_type' => $validated['type_prix'],
-        'price'      => $validated['tarif'],
-    ]);
+        $service = Service::create([
+            'name' => $validated['serviceName'],
+            'price_type' => $validated['priceType'],
+            'price' => $validated['price'],
+        ]);
 
-    // 3. Retour de la réponse JSON au client
-    return response()->json([
-        'status'  => 'success',
-        'message' => 'Service créé avec succès',
-        'data'    => $service
-    ], 201);
+        return response()->json([
+            'message' => 'Service created successfully',
+            'serviceId'=> $service->id 
+        ], 201);
     }
 
     /**
@@ -53,9 +61,14 @@ class ServiceController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Service $service) : JsonResponse
     {
-        //
+        return response()->json([
+            'id' => $service->id,
+            'serviceName' => $service->name,
+            'priceType' => $service->price_type,
+            'price' => $service->price
+        ]);
     }
 
     /**
@@ -65,9 +78,21 @@ class ServiceController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Service $service) : JsonResponse
     {
-        //
+        $validated = $request->validate([
+            'serviceName' => 'sometimes|string|max:255',
+            'priceType' => 'sometimes|in:fixed,km,day',
+            'price' => 'sometimes|numeric|min:0',
+        ]);
+
+        $service->update([
+            'name' => $validated['serviceName'] ?? $service->name,
+            'price_type' => $validated['priceType'] ?? $service->price_type,
+            'price' => $validated['price'] ?? $service->price,
+        ]);
+
+        return response()->json(['message' => 'Service updated successfully']);
     }
 
     /**

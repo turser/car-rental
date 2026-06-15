@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Car;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class CarController extends Controller
@@ -13,7 +14,7 @@ class CarController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index() : JsonResponse
     {
         $cars = Car::with([
             'images',
@@ -36,13 +37,12 @@ class CarController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request) : JsonResponse
     {
         if (auth()->user()->role !== 'admin') {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
         $validated = $request->validate([
-
             'brand' => 'required',
             'model' => 'required',
             'plateNumber' => 'required|unique:cars,registration_number',
@@ -86,9 +86,9 @@ class CarController extends Controller
                 ]);
             }
         }
+
         return response()->json([
             'message' => 'Car created',
-            'car' => $car->load('images')
         ]);
     }
 
@@ -98,7 +98,7 @@ class CarController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show(Car $car)
+    public function show(Car $car) : JsonResponse
     {
         // Same agency check
         if ($car->agency_id != auth()->user()->agency_id) {

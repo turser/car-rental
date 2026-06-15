@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\CarController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\InsuranceController;
+use App\Http\Controllers\Api\TaxController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -46,6 +47,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
 
     Route::apiResource('insurances',InsuranceController::class);
+
+    Route::apiResource('taxes',TaxController::class);
 
     Route::apiResource('services', ServiceController::class);
 

@@ -52,7 +52,7 @@ class InsuranceController extends Controller
 
         return response()->json([
             'message' => 'Insurance created successfully',
-            'data' => $insurance
+            
         ], 201);
     }
 
@@ -103,7 +103,6 @@ class InsuranceController extends Controller
 
         return response()->json([
             'message' => 'Insurance updated successfully',
-            'data' => $insurance->fresh()
         ]);
     }
 
