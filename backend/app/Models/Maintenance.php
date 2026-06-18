@@ -8,4 +8,19 @@ use Illuminate\Database\Eloquent\Model;
 class Maintenance extends Model
 {
     use HasFactory;
+    protected $fillable = [
+    'car_id',
+    'type',
+    'cost',
+    'date',
+    'mileage',
+    'next_due_mileage',
+    'status'
+];
+
+
+public function car()
+{
+    return $this->belongsTo(Car::class);
+}
 }

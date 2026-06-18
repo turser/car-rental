@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->string('full_name');
             $table->string('cin')->unique();
-            $table->string('driving_license')->nullable();
+            $table->string('driving_license')->unique();
              $table->date('driving_license_expiration')->nullable();
             $table->string('phone');
             $table->string('email')->nullable();

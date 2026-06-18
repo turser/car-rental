@@ -31,5 +31,12 @@ class UserSeeder extends Seeder
             'role' => 'admin',
             'agency_id' => 1
         ]);
+        User::create([
+            'name' => 'amin kanafi',
+            'email' => 'kanafi@test.com',
+            'password' => Hash::make('kanafi-2020'),
+            'role' => 'employee',
+            'agency_id' => 1
+        ]);
     }
 }
