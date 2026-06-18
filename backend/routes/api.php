@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CarController;
 use App\Http\Controllers\Api\ClientController;
+use App\Http\Controllers\Api\MaintenanceController;
 use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\InsuranceController;
 use App\Http\Controllers\Api\TaxController;
@@ -47,6 +48,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
 
     Route::apiResource('insurances',InsuranceController::class);
+
+    Route::apiResource('maintenance',MaintenanceController::class);
+
+    Route::patch('/maintenances/{maintenance}/complete', [MaintenanceController::class , 'complete']);
+
 
     Route::apiResource('taxes',TaxController::class);
 
