@@ -8,6 +8,19 @@ use Illuminate\Database\Eloquent\Model;
 class Rental extends Model
 {
     use HasFactory;
+
+    protected $fillable = [
+        'client_id' , 
+        'car_id' , 
+        'agency_id' , 
+        'start_date' , 
+        'end_date' , 
+        'actual_return_date' , 
+        'price_per_day',
+        'total_price', 
+        'paid_amount', 
+        'status',
+    ] ;
     public function client()
 {
     return $this->belongsTo(Client::class);
