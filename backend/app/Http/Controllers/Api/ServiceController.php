@@ -39,7 +39,7 @@ class ServiceController extends Controller
     {
         $validated = $request->validate([
             'serviceName' => 'required|string|max:255',
-            'priceType' => 'required|in:fixed,fixed,km,day',
+            'priceType' => 'required|in:fixed,per_km,per_day',
             'price' => 'required|numeric|min:0',
         ]);
 
@@ -82,7 +82,7 @@ class ServiceController extends Controller
     {
         $validated = $request->validate([
             'serviceName' => 'sometimes|string|max:255',
-            'priceType' => 'sometimes|in:fixed,km,day',
+            'priceType' => 'sometimes|in:fixed,per_km,per_day',
             'price' => 'sometimes|numeric|min:0',
         ]);
 
