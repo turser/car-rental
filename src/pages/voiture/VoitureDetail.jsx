@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import api from '../api/api';
+import api from '../../api/api';
 
 const IMAGE_BASE = 'https://car-rental-production-59c6.up.railway.app/storage/';
 
@@ -53,9 +53,12 @@ function DataTable({ headers, rows, empty }) {
 export default function VoitureDetail() {
     const { id }   = useParams();
     const navigate = useNavigate();
-    const [car, setCar]         = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError]     = useState('');
+    const [car, setCar]               = useState(null);
+    const [loading, setLoading]       = useState(true);
+    const [error, setError]           = useState('');
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [deleting, setDeleting]       = useState(false);
+    const [deleteError, setDeleteError] = useState('');
 
     useEffect(() => {
         api.get(`/cars/${id}`)
@@ -63,6 +66,18 @@ export default function VoitureDetail() {
             .catch(() => setError('Voiture introuvable.'))
             .finally(() => setLoading(false));
     }, [id]);
+
+    const handleDelete = async () => {
+        setDeleting(true);
+        setDeleteError('');
+        try {
+            await api.delete(`/cars/${id}`);
+            navigate('/voitures');
+        } catch (err) {
+            setDeleteError(err.response?.data?.message || 'Erreur lors de la suppression.');
+            setDeleting(false);
+        }
+    };
 
     if (loading) return (
         <div className="space-y-4 max-w-4xl">
@@ -85,13 +100,29 @@ export default function VoitureDetail() {
         <div className="max-w-4xl">
 
             {/* Header */}
-            <div className="flex items-center gap-3 mb-6">
-                <button onClick={() => navigate('/voitures')} className="text-sm text-slate-500 hover:text-slate-900 transition flex items-center gap-1.5 font-medium">
-                    <i className="ti ti-arrow-left text-[14px]" /> Retour
-                </button>
-                <div className="w-px h-4 bg-slate-300" />
-                <h1 className="text-xl font-semibold text-slate-900">{car.brand} {car.model}</h1>
-                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${status.cls}`}>{status.label}</span>
+            <div className="flex items-center justify-between gap-3 mb-6">
+                <div className="flex items-center gap-3">
+                    <button onClick={() => navigate('/voitures')} className="text-sm text-slate-500 hover:text-slate-900 transition flex items-center gap-1.5 font-medium">
+                        <i className="ti ti-arrow-left text-[14px]" /> Retour
+                    </button>
+                    <div className="w-px h-4 bg-slate-300" />
+                    <h1 className="text-xl font-semibold text-slate-900">{car.brand} {car.model}</h1>
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${status.cls}`}>{status.label}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => navigate(`/voitures/${id}/modifier`)}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-300 text-slate-600 text-sm font-medium hover:bg-slate-50 transition"
+                    >
+                        <i className="ti ti-pencil text-[14px]" /> Modifier
+                    </button>
+                    <button
+                        onClick={() => setShowConfirm(true)}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 transition"
+                    >
+                        <i className="ti ti-trash text-[14px]" /> Supprimer
+                    </button>
+                </div>
             </div>
 
             {/* Main info */}
@@ -198,6 +229,51 @@ export default function VoitureDetail() {
                     })}
                 />
             </Section>
+
+            {/* Confirmation suppression */}
+            {showConfirm && (
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
+                    <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-5">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0">
+                                <i className="ti ti-alert-triangle text-red-600 text-[18px]" />
+                            </div>
+                            <h3 className="text-base font-semibold text-slate-900">Supprimer cette voiture ?</h3>
+                        </div>
+                        <p className="text-sm text-slate-500 mb-4">
+                            Cette action est irréversible. {car.brand} {car.model} ({car.registration_number}) sera définitivement supprimée.
+                        </p>
+                        {deleteError && (
+                            <div className="flex items-center gap-2 bg-red-50 text-red-600 px-3 py-2 rounded-lg border border-red-200 text-xs mb-4">
+                                <i className="ti ti-alert-circle" /> {deleteError}
+                            </div>
+                        )}
+                        <div className="flex items-center justify-end gap-2">
+                            <button
+                                onClick={() => setShowConfirm(false)}
+                                disabled={deleting}
+                                className="px-4 py-2 rounded-lg border border-slate-300 text-slate-600 text-sm font-medium hover:bg-slate-50 transition disabled:opacity-60"
+                            >
+                                Annuler
+                            </button>
+                            <button
+                                onClick={handleDelete}
+                                disabled={deleting}
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 disabled:opacity-60 text-white text-sm font-medium transition"
+                            >
+                                {deleting ? (
+                                    <>
+                                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                            <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+                                        </svg>
+                                        Suppression…
+                                    </>
+                                ) : 'Supprimer'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </div>
     );
