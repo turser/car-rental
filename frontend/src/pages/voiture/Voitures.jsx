@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api/api';
+import api from '../../api/api';
 
 const STATUS = {
     available:   { label: 'Disponible',   cls: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' },
@@ -27,7 +27,7 @@ export default function Voitures() {
             .catch(() => setError('Erreur lors du chargement des voitures.'))
             .finally(() => setLoading(false));
     }, []);
-
+    console.log(cars);
     const filtered = cars.filter(car => {
         const q = search.toLowerCase();
         const matchSearch = car.brand.toLowerCase().includes(q) || car.model.toLowerCase().includes(q) || car.registration_number.toLowerCase().includes(q);
@@ -43,16 +43,15 @@ export default function Voitures() {
             <div className="grid grid-cols-4 gap-4">
                 {[...Array(4)].map((_, i) => <div key={i} className="h-20 bg-slate-200 rounded-xl animate-pulse" />)}
             </div>
-            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-                {[...Array(6)].map((_, i) => (
-                    <div key={i} className="flex items-center gap-4 px-5 py-3.5 border-b border-slate-100">
-                        <div className="w-10 h-10 bg-slate-200 rounded-lg animate-pulse" />
-                        <div className="flex-1 space-y-1.5">
-                            <div className="h-3.5 bg-slate-200 rounded animate-pulse w-1/3" />
-                            <div className="h-3 bg-slate-200 rounded animate-pulse w-1/5" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {[...Array(8)].map((_, i) => (
+                    <div key={i} className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                        <div className="h-36 bg-slate-200 animate-pulse" />
+                        <div className="p-4 space-y-2">
+                            <div className="h-4 bg-slate-200 rounded animate-pulse w-2/3" />
+                            <div className="h-3 bg-slate-200 rounded animate-pulse w-1/3" />
+                            <div className="h-3 bg-slate-200 rounded animate-pulse w-1/2" />
                         </div>
-                        <div className="h-3.5 bg-slate-200 rounded animate-pulse w-20" />
-                        <div className="h-5 bg-slate-200 rounded-full animate-pulse w-20" />
                     </div>
                 ))}
             </div>
@@ -123,61 +122,44 @@ export default function Voitures() {
                 </select>
             </div>
 
-            {/* Table */}
+            {/* Cards */}
             {filtered.length === 0 ? (
                 <div className="text-center py-16 text-slate-400 bg-white border border-slate-200 rounded-xl">
                     Aucune voiture trouvée.
                 </div>
             ) : (
-                <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="border-b border-slate-200 bg-slate-50">
-                                {['Voiture', 'Immatriculation', 'Carburant', 'Kilométrage', 'Prix / jour', 'Statut', ''].map(h => (
-                                    <th key={h} className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{h}</th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {filtered.map(car => {
-                                const img = car.images?.find(i => i.is_primary) || car.images?.[0];
-                                const s   = STATUS[car.status] || { label: car.status, cls: 'bg-slate-100 text-slate-600 ring-1 ring-slate-200' };
-                                return (
-                                    <tr key={car.id} className="hover:bg-slate-50/70 transition-colors">
-                                        <td className="px-5 py-3.5">
-                                            <div className="flex items-center gap-3">
-                                                {img ? (
-                                                    <img src={IMAGE_BASE + img.image_path} alt={car.brand} className="w-10 h-10 rounded-lg object-cover border border-slate-200 flex-shrink-0" />
-                                                ) : (
-                                                    <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0">
-                                                        <i className="ti ti-car text-slate-400 text-[18px]" />
-                                                    </div>
-                                                )}
-                                                <div>
-                                                    <p className="font-medium text-slate-900">{car.brand} {car.model}</p>
-                                                    <p className="text-xs text-slate-400">{car.purchase_date}</p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-5 py-3.5 font-mono text-xs text-slate-500">{car.registration_number}</td>
-                                        <td className="px-5 py-3.5 text-slate-600">{FUEL[car.fuel_type] || car.fuel_type}</td>
-                                        <td className="px-5 py-3.5 text-slate-600">{car.mileage.toLocaleString()} km</td>
-                                        <td className="px-5 py-3.5 font-semibold text-slate-900">{parseFloat(car.daily_price).toLocaleString()} MAD</td>
-                                        <td className="px-5 py-3.5">
-                                            <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${s.cls}`}>{s.label}</span>
-                                        </td>
-                                        <td className="px-5 py-3.5">
-                                            <div className="flex items-center gap-3">
-                                                <button onClick={() => navigate(`/voitures/${car.id}`)} className="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition">Voir</button>
-                                                <button className="text-xs font-medium text-slate-500 hover:text-slate-800 transition">Modifier</button>
-                                                <button className="text-xs font-medium text-slate-400 hover:text-red-600 transition">Supprimer</button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {filtered.map(car => {
+                        const img = car.images?.find(i => i.is_primary) || car.images?.[0];
+                        const s   = STATUS[car.status] || { label: car.status, cls: 'bg-slate-100 text-slate-600 ring-1 ring-slate-200' };
+                        return (
+                            <button
+                                key={car.id}
+                                onClick={() => navigate(`/voitures/${car.id}`)}
+                                className="text-left bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-200 transition overflow-hidden group"
+                            >
+                                <div className="h-36 bg-slate-100 border-b border-slate-200 flex items-center justify-center overflow-hidden">
+                                    {img ? (
+                                        <img src={IMAGE_BASE + img.image_path} alt={car.brand} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                                    ) : (
+                                        <i className="ti ti-car text-slate-300 text-4xl" />
+                                    )}
+                                </div>
+                                <div className="p-4">
+                                    <div className="flex items-start justify-between gap-2 mb-1.5">
+                                        <p className="font-semibold text-slate-900 truncate">{car.brand} {car.model}</p>
+                                        <span className={`flex-shrink-0 text-[11px] px-2 py-0.5 rounded-full font-medium ${s.cls}`}>{s.label}</span>
+                                    </div>
+                                    <p className="font-mono text-xs text-slate-400 mb-3">{car.registration_number}</p>
+                                    <div className="flex items-center justify-between text-xs text-slate-500">
+                                        <span className="flex items-center gap-1"><i className="ti ti-gas-station text-[14px]" /> {FUEL[car.fuel_type] || car.fuel_type}</span>
+                                        <span className="flex items-center gap-1"><i className="ti ti-road text-[14px]" /> {car.mileage.toLocaleString()} km</span>
+                                    </div>
+                                    <p className="mt-3 text-sm font-bold text-slate-900">{parseFloat(car.daily_price).toLocaleString()} MAD<span className="text-xs font-normal text-slate-400"> / jour</span></p>
+                                </div>
+                            </button>
+                        );
+                    })}
                 </div>
             )}
         </div>

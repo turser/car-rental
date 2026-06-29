@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from '../api/api';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import api from '../../api/api';
 
 const FUEL_OPTIONS = [
     { value: 'diesel',   label: 'Diesel' },
@@ -8,6 +8,8 @@ const FUEL_OPTIONS = [
     { value: 'electric', label: 'Électrique' },
     { value: 'hybrid',   label: 'Hybride' },
 ];
+
+const IMAGE_BASE = 'https://car-rental-production-59c6.up.railway.app/storage/';
 
 const inputCls = 'w-full bg-white border border-slate-300 text-slate-900 placeholder-slate-400 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition';
 
@@ -22,8 +24,9 @@ function Field({ label, required, children }) {
     );
 }
 
-export default function AjouterVoiture() {
+export default function ModifierVoiture() {
     const navigate = useNavigate();
+    const { id } = useParams();
 
     const [form, setForm] = useState({
         brand: '',
@@ -39,8 +42,30 @@ export default function AjouterVoiture() {
     const [images, setImages]                 = useState([]);
     const [primaryPreview, setPrimaryPreview] = useState(null);
     const [imagePreviews, setImagePreviews]   = useState([]);
+    const [loading, setLoading]               = useState(true);
     const [submitting, setSubmitting]         = useState(false);
     const [error, setError]                   = useState('');
+
+    useEffect(() => {
+        api.get(`/cars/${id}`)
+            .then(res => {
+                const car = res.data;
+                setForm({
+                    brand: car.brand || '',
+                    model: car.model || '',
+                    plateNumber: car.registration_number || '',
+                    purchaseDate: car.purchase_date ? car.purchase_date.slice(0, 10) : '',
+                    purchasePrice: car.purchase_price || '',
+                    mileage: car.mileage || '',
+                    dailyPrice: car.daily_price || '',
+                    fuelType: car.fuel_type || 'diesel',
+                });
+                const img = car.images?.find(i => i.is_primary) || car.images?.[0];
+                if (img) setPrimaryPreview(IMAGE_BASE + img.image_path);
+            })
+            .catch(() => setError('Voiture introuvable.'))
+            .finally(() => setLoading(false));
+    }, [id]);
 
     const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
@@ -63,24 +88,32 @@ export default function AjouterVoiture() {
         setSubmitting(true);
         try {
             const data = new FormData();
+            data.append('_method', 'PUT');
             Object.entries(form).forEach(([k, v]) => data.append(k, v));
             if (primaryImage) data.append('primaryImage', primaryImage);
             images.forEach(img => data.append('images[]', img));
-            await api.post('/cars', data, {
+            await api.post(`/cars/${id}`, data, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
-            navigate('/voitures');
+            navigate(`/voitures/${id}`);
         } catch (err) {
             const errors = err.response?.data?.errors;
             if (errors) {
                 setError(Object.values(errors).flat().join(' — '));
             } else {
-                setError(err.response?.data?.message || "Erreur lors de l'ajout.");
+                setError(err.response?.data?.message || 'Erreur lors de la modification.');
             }
         } finally {
             setSubmitting(false);
         }
     };
+
+    if (loading) return (
+        <div className="max-w-3xl mx-auto space-y-4">
+            <div className="h-7 w-56 bg-slate-200 rounded animate-pulse" />
+            {[...Array(3)].map((_, i) => <div key={i} className="h-40 bg-slate-200 rounded-xl animate-pulse" />)}
+        </div>
+    );
 
     return (
         <div className="max-w-3xl mx-auto">
@@ -88,14 +121,14 @@ export default function AjouterVoiture() {
             <div className="flex items-center gap-3 mb-6">
                 <button
                     type="button"
-                    onClick={() => navigate('/voitures')}
+                    onClick={() => navigate(`/voitures/${id}`)}
                     className="w-8 h-8 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:bg-slate-50 transition"
                 >
                     <i className="ti ti-arrow-left text-[15px]" />
                 </button>
                 <div>
-                    <h1 className="text-xl font-semibold text-slate-900">Ajouter une voiture</h1>
-                    <p className="text-sm text-slate-500 mt-0.5">Remplissez les informations du véhicule</p>
+                    <h1 className="text-xl font-semibold text-slate-900">Modifier la voiture</h1>
+                    <p className="text-sm text-slate-500 mt-0.5">Mettez à jour les informations du véhicule</p>
                 </div>
             </div>
 
@@ -250,7 +283,7 @@ export default function AjouterVoiture() {
                         {/* Photos supplémentaires */}
                         <div>
                             <p className="text-xs font-medium text-slate-600 mb-2">
-                                Photos supplémentaires
+                                Ajouter des photos
                             </p>
                             <label className="block cursor-pointer">
                                 <div className="w-full h-40 rounded-lg border-2 border-dashed border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/30 transition overflow-hidden relative flex flex-col items-center justify-center gap-1.5">
@@ -291,7 +324,7 @@ export default function AjouterVoiture() {
                 <div className="flex items-center justify-end gap-3 pb-6">
                     <button
                         type="button"
-                        onClick={() => navigate('/voitures')}
+                        onClick={() => navigate(`/voitures/${id}`)}
                         className="px-4 py-2 rounded-lg border border-slate-300 text-slate-600 text-sm font-medium hover:bg-slate-50 transition"
                     >
                         Annuler
