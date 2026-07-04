@@ -3,11 +3,13 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CarController;
 use App\Http\Controllers\Api\ClientController;
+use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\MaintenanceController;
 use App\Http\Controllers\Api\RentalController;
 use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\InsuranceController;
 use App\Http\Controllers\Api\TaxController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -40,6 +42,11 @@ Route::post('/login', [AuthController::class, 'login']);
 
 
 Route::middleware('auth:sanctum')->group(function () {
+
+    Route::apiResource('users', UserController::class);
+    Route::patch('/{user}/reset-password', 'resetPassword');
+
+
     Route::apiResource('cars', CarController::class);
 
     Route::apiResource('clients', ClientController::class);
@@ -55,8 +62,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/maintenances/{maintenance}/complete', [MaintenanceController::class, 'complete']);
 
     Route::apiResource('rentals', RentalController::class);
-    
-    Route::get('createrental', [RentalController::class,'create']);
+
+    Route::post('/rentals/{rental}/payments', [RentalController::class, 'addPayment']);
+    Route::patch('/rentals/{rental}/cancel', [RentalController::class, 'cancel']);
+    Route::get('/rentals/{rental}/invoice', [InvoiceController::class, 'generate']);
+
+
+    Route::get('createrental', [RentalController::class, 'create']);
 
     Route::apiResource('taxes', TaxController::class);
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Car;
 use App\Models\Client;
 use App\Models\Insurance;
+use App\Models\Payment;
 use App\Models\Rental;
 use App\Models\RentalService;
 use App\Models\Service;
@@ -282,7 +283,7 @@ class RentalController extends Controller
                     $s['created_at'] = now();
                     $s['updated_at'] = now();
                 }
-                RentalService::create($servicesData);
+                RentalService::insert($servicesData);
             }
 
             // Mark car as rented so it won't appear as available
@@ -358,4 +359,299 @@ class RentalController extends Controller
     {
         //
     }
+
+    public function addPayment(Request $request, Rental $rental): JsonResponse
+    {
+
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0',
+            'paymentMethod' => 'required|in:cash,card,transfer',
+            'paymentDate' => 'required|date',
+        ]);
+
+        if ($rental->agency_id !== auth()->user()->agency_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This rental does not belong to your agency.',
+            ], 403);
+        }
+
+        if ($rental->status === 'canceled') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot add payment to a canceled rental.',
+            ], 422);
+        }
+
+
+        $remainingAmount = $rental->total_price - $rental->paid_amount;
+
+        if ($validated['amount'] > $remainingAmount) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment amount exceeds remaining balance.',
+                'data' => [
+                    'totalPrice' => $rental->total_price,
+                    'paidAmount' => $rental->paid_amount,
+                    'remainingAmount' => $remainingAmount,
+                ],
+            ], 422);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $payment = Payment::create([
+                'rental_id' => $rental->id,
+                'amount' => $validated['amount'],
+                'payment_method' => $validated['paymentMethod'],
+                'payment_date' => $validated['paymentDate'],
+            ]);
+
+            $rental->increment('paid_amount', $validated['amount']);
+
+            DB::commit();
+            $rental->refresh();
+
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment added successfully.',
+                'data' => [
+                    'paymentId' => $payment->id,
+                    'rentalId' => $rental->id,
+                    'amount' => $payment->amount,
+                    'paymentMethod' => $payment->payment_method,
+                    'paymentDate' => $payment->payment_date,
+                    'totalPrice' => $rental->total_price,
+                    'paidAmount' => $rental->paid_amount,
+                    'remainingAmount' => $rental->total_price - $rental->paid_amount,
+                    'isFullyPaid' => $rental->paid_amount >= $rental->total_price,
+                ],
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to add payment.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Return the car and close the rental
+     */
+    /**
+     * Return the car and close the rental
+     */
+    public function returnCar(Request $request, Rental $rental): JsonResponse
+    {
+        // ============================================================
+        // 1. Validate incoming request data
+        // ============================================================
+        $validated = $request->validate([
+            'actualReturnDate' => 'required|date',
+            'finalPayment' => 'nullable|numeric|min:0',
+            'paymentMethod' => 'required_with:finalPayment|in:cash,card,transfer',
+        ]);
+
+        // ============================================================
+        // 2. Check rental belongs to the authenticated user's agency
+        // ============================================================
+        if ($rental->agency_id !== auth()->user()->agency_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This rental does not belong to your agency.',
+            ], 403);
+        }
+
+        // ============================================================
+        // 3. Check rental is active
+        // ============================================================
+        if ($rental->status !== 'active') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only active rentals can be returned.',
+            ], 422);
+        }
+
+        // ============================================================
+        // 4. Calculate remaining balance
+        // ============================================================
+        $finalPayment = $validated['finalPayment'] ?? 0;
+        $remainingAmount = $rental->total_price - $rental->paid_amount;
+
+        // Check final payment does not exceed remaining balance
+        if ($finalPayment > $remainingAmount) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment amount exceeds remaining balance.',
+                'data' => [
+                    'totalPrice' => $rental->total_price,
+                    'paidAmount' => $rental->paid_amount,
+                    'remainingAmount' => $remainingAmount,
+                ],
+            ], 422);
+        }
+
+        // ============================================================
+        // 5. Check if fully paid before closing
+        // ============================================================
+        $newPaidAmount = $rental->paid_amount + $finalPayment;
+        $isFullyPaid = $newPaidAmount >= $rental->total_price;
+
+        if (!$isFullyPaid) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot close rental. There is still a remaining balance.',
+                'data' => [
+                    'totalPrice' => $rental->total_price,
+                    'paidAmount' => $newPaidAmount,
+                    'remainingAmount' => $rental->total_price - $newPaidAmount,
+                ],
+            ], 422);
+        }
+
+        // ============================================================
+        // 6. Persist changes inside a transaction
+        // ============================================================
+        DB::beginTransaction();
+
+        try {
+            // Add final payment if provided
+            if ($finalPayment > 0) {
+                Payment::create([
+                    'rental_id' => $rental->id,
+                    'amount' => $finalPayment,
+                    'payment_method' => $validated['paymentMethod'],
+                    'payment_date' => $validated['actualReturnDate'],
+                ]);
+
+                $rental->increment('paid_amount', $finalPayment);
+            }
+
+            // Close the rental
+            $rental->update([
+                'status' => 'completed',
+                'actual_return_date' => $validated['actualReturnDate'],
+            ]);
+
+            // Mark car as available again
+            $rental->car->update(['status' => 'available']);
+
+            DB::commit();
+
+            $rental->refresh();
+
+            // ============================================================
+            // 7. Return success response
+            // ============================================================
+            return response()->json([
+                'success' => true,
+                'message' => 'Car returned successfully. Rental is now completed.',
+                'data' => [
+                    'rentalId' => $rental->id,
+                    'actualReturnDate' => $rental->actual_return_date,
+                    'totalPrice' => $rental->total_price,
+                    'paidAmount' => $rental->paid_amount,
+                    'remainingAmount' => 0,
+                    'isFullyPaid' => true,
+                    'status' => $rental->status,
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to return car.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Cancel a rental
+     */
+    public function cancel(Rental $rental): JsonResponse
+    {
+        // ============================================================
+        // 1. Check rental belongs to the authenticated user's agency
+        // ============================================================
+        if ($rental->agency_id !== auth()->user()->agency_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This rental does not belong to your agency.',
+            ], 403);
+        }
+
+        // ============================================================
+        // 2. Check rental is active (only active rentals can be canceled)
+        // ============================================================
+        if ($rental->status !== 'active') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only active rentals can be canceled.',
+            ], 422);
+        }
+
+        // ============================================================
+        // 3. Check if rental has payments (cannot cancel if paid)
+        // ============================================================
+        if ($rental->paid_amount > 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot cancel a rental that has payments. Please refund first.',
+                'data' => [
+                    'paidAmount' => $rental->paid_amount,
+                ],
+            ], 422);
+        }
+
+        // ============================================================
+        // 4. Persist changes inside a transaction
+        // ============================================================
+        DB::beginTransaction();
+
+        try {
+            // Cancel the rental
+            $rental->update([
+                'status' => 'canceled',
+            ]);
+
+            // Mark car as available again
+            $rental->car->update([
+                'status' => 'available',
+            ]);
+
+            DB::commit();
+
+            // ============================================================
+            // 5. Return success response
+            // ============================================================
+            return response()->json([
+                'success' => true,
+                'message' => 'Rental canceled successfully.',
+                'data' => [
+                    'rentalId' => $rental->id,
+                    'status' => $rental->status,
+                    'carStatus' => $rental->car->fresh()->status,
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to cancel rental.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+    
 }
