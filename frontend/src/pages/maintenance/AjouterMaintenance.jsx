@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/api';
 
-const inputCls = 'w-full bg-white border border-slate-300 text-slate-900 placeholder-slate-400 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition';
+const inputCls = 'w-full bg-white border border-stone-300 text-stone-900 placeholder-stone-400 px-3 py-2 rounded-md text-sm focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition';
 
 function Field({ label, required, children }) {
     return (
         <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">
+            <label className="block text-xs font-medium text-stone-600 mb-1.5">
                 {label}{required && <span className="text-red-500 ml-0.5">*</span>}
             </label>
             {children}
@@ -65,26 +65,26 @@ export default function AjouterMaintenance() {
                 <button
                     type="button"
                     onClick={() => navigate('/maintenance')}
-                    className="w-8 h-8 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:bg-slate-50 transition"
+                    className="w-8 h-8 rounded-md border border-stone-200 bg-white flex items-center justify-center text-stone-500 hover:bg-stone-50 transition"
                 >
                     <i className="ti ti-arrow-left text-[15px]" />
                 </button>
                 <div>
-                    <h1 className="text-xl font-semibold text-slate-900">Ajouter une maintenance</h1>
-                    <p className="text-sm text-slate-500 mt-0.5">Remplissez les informations de l'intervention</p>
+                    <h1 className="text-xl font-semibold text-stone-900">Ajouter une maintenance</h1>
+                    <p className="text-sm text-stone-500 mt-0.5">Remplissez les informations de l'intervention</p>
                 </div>
             </div>
 
             {error && (
-                <div className="flex items-start gap-2 bg-red-50 text-red-600 px-4 py-3 rounded-xl border border-red-200 text-sm mb-5">
+                <div className="flex items-start gap-2 bg-red-50 text-red-600 px-4 py-3 rounded-lg border border-red-200 text-sm mb-5">
                     <i className="ti ti-alert-circle mt-0.5 flex-shrink-0" /> {error}
                 </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-                    <h2 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
-                        <i className="ti ti-tool text-blue-500" /> Détails de l'intervention
+                <div className="bg-white border border-stone-200 rounded-lg p-5 shadow-sm">
+                    <h2 className="text-sm font-semibold text-stone-700 mb-4 flex items-center gap-2">
+                        <i className="ti ti-tool text-emerald-500" /> Détails de l'intervention
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="sm:col-span-2">
@@ -166,14 +166,14 @@ export default function AjouterMaintenance() {
                     <button
                         type="button"
                         onClick={() => navigate('/maintenance')}
-                        className="px-4 py-2 rounded-lg border border-slate-300 text-slate-600 text-sm font-medium hover:bg-slate-50 transition"
+                        className="px-4 py-2 rounded-md border border-stone-300 text-stone-600 text-sm font-medium hover:bg-stone-50 transition"
                     >
                         Annuler
                     </button>
                     <button
                         type="submit"
                         disabled={submitting}
-                        className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium transition shadow-sm"
+                        className="inline-flex items-center gap-2 px-5 py-2 rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium transition shadow-sm"
                     >
                         {submitting ? (
                             <>

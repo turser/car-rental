@@ -9,7 +9,7 @@ export default function ThemeToggle() {
         <button
             onClick={toggleTheme}
             title={isDark ? 'Passer au thème clair' : 'Passer au thème sombre'}
-            className="fixed top-4 right-4 z-50 w-10 h-10 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center text-slate-500 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition"
+            className="fixed top-4 right-4 z-50 w-10 h-10 rounded-full bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 shadow-sm flex items-center justify-center text-stone-500 dark:text-stone-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-stone-50 dark:hover:bg-stone-700 transition"
         >
             <i className={`ti ${isDark ? 'ti-sun' : 'ti-moon'} text-[18px]`} />
         </button>
