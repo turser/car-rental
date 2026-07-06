@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\MaintenanceController;
 use App\Http\Controllers\Api\RentalController;
+use App\Http\Controllers\Api\RentalExtensionController;
 use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\InsuranceController;
 use App\Http\Controllers\Api\TaxController;
@@ -63,9 +64,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::apiResource('rentals', RentalController::class);
 
+    Route::apiResource('rentalexension',RentalExtensionController::class);
+    
     Route::post('/rentals/{rental}/payments', [RentalController::class, 'addPayment']);
     Route::patch('/rentals/{rental}/cancel', [RentalController::class, 'cancel']);
     Route::get('/rentals/{rental}/invoice', [InvoiceController::class, 'generate']);
+
+
 
 
     Route::get('createrental', [RentalController::class, 'create']);

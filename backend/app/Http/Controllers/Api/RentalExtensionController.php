@@ -96,6 +96,7 @@ class RentalExtensionController extends Controller
             ->diffInDays(Carbon::parse($validated['newEndDate'])) + 1;
 
         $newBasePrice = $newDays * $rental->price_per_day;
+        $servicesTotal = 0;
 
         foreach ($rental->services()->with('service')->get() as $rentalService) {
             if ($extendServices && $rentalService->service->price_type === 'per_day') {
