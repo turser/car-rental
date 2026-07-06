@@ -45,7 +45,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::apiResource('users', UserController::class);
-    Route::patch('/{user}/reset-password', [UserController::class,'resetPassword']);
+    Route::patch('users/{user}/reset-password', [UserController::class,'resetPassword']);
 
 
     Route::apiResource('cars', CarController::class);
