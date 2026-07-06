@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/api';
 
-const inputCls = 'w-full bg-white border border-slate-300 text-slate-900 placeholder-slate-400 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition';
+const inputCls = 'w-full bg-white border border-stone-300 text-stone-900 placeholder-stone-400 px-3 py-2 rounded-md text-sm focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition';
 
 const fmtPrice = p => (p || p === 0) ? parseFloat(p).toLocaleString() + ' MAD' : '—';
 
@@ -15,11 +15,11 @@ const SERVICE_QTY_LABEL = {
 function Field({ label, required, hint, children }) {
     return (
         <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">
+            <label className="block text-xs font-medium text-stone-600 mb-1.5">
                 {label}{required && <span className="text-red-500 ml-0.5">*</span>}
             </label>
             {children}
-            {hint && <p className="text-xs text-slate-400 mt-1">{hint}</p>}
+            {hint && <p className="text-xs text-stone-400 mt-1">{hint}</p>}
         </div>
     );
 }
@@ -126,7 +126,7 @@ export default function AjouterReservation() {
             if (form.pricePerDay !== '') payload.pricePerDay = form.pricePerDay;
             if (form.paidAmount !== '') payload.paidAmount = form.paidAmount;
 
-            await api.post('/rental', payload);
+            await api.post('/rentals', payload);
             navigate('/reservations');
         } catch (err) {
             const errors = err.response?.data?.errors;
@@ -142,8 +142,8 @@ export default function AjouterReservation() {
 
     if (loadingData) return (
         <div className="max-w-2xl mx-auto space-y-4">
-            <div className="h-7 w-56 bg-slate-200 rounded animate-pulse" />
-            <div className="h-64 bg-slate-200 rounded-xl animate-pulse" />
+            <div className="h-7 w-56 bg-stone-200 rounded-sm animate-pulse" />
+            <div className="h-64 bg-stone-200 rounded-lg animate-pulse" />
         </div>
     );
 
@@ -154,26 +154,26 @@ export default function AjouterReservation() {
                 <button
                     type="button"
                     onClick={() => navigate('/reservations')}
-                    className="w-8 h-8 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:bg-slate-50 transition"
+                    className="w-8 h-8 rounded-md border border-stone-200 bg-white flex items-center justify-center text-stone-500 hover:bg-stone-50 transition"
                 >
                     <i className="ti ti-arrow-left text-[15px]" />
                 </button>
                 <div>
-                    <h1 className="text-xl font-semibold text-slate-900">Ajouter une réservation</h1>
-                    <p className="text-sm text-slate-500 mt-0.5">Remplissez les informations de la location</p>
+                    <h1 className="text-xl font-semibold text-stone-900">Ajouter une réservation</h1>
+                    <p className="text-sm text-stone-500 mt-0.5">Remplissez les informations de la location</p>
                 </div>
             </div>
 
             {error && (
-                <div className="flex items-start gap-2 bg-red-50 text-red-600 px-4 py-3 rounded-xl border border-red-200 text-sm mb-5">
+                <div className="flex items-start gap-2 bg-red-50 text-red-600 px-4 py-3 rounded-lg border border-red-200 text-sm mb-5">
                     <i className="ti ti-alert-circle mt-0.5 flex-shrink-0" /> {error}
                 </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-                    <h2 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
-                        <i className="ti ti-calendar-event text-blue-500" /> Détails de la réservation
+                <div className="bg-white border border-stone-200 rounded-lg p-5 shadow-sm">
+                    <h2 className="text-sm font-semibold text-stone-700 mb-4 flex items-center gap-2">
+                        <i className="ti ti-calendar-event text-emerald-500" /> Détails de la réservation
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <Field label="Client" required>
@@ -188,19 +188,19 @@ export default function AjouterReservation() {
                                     className={`${inputCls} font-mono`}
                                 />
                                 {clientOpen && clientQuery && (
-                                    <div className="absolute z-10 mt-1 w-full max-h-56 overflow-y-auto bg-white border border-slate-200 rounded-lg shadow-lg">
+                                    <div className="absolute z-10 mt-1 w-full max-h-56 overflow-y-auto bg-white border border-stone-200 rounded-md shadow-lg">
                                         {filteredClients.length === 0 ? (
-                                            <p className="px-3 py-2 text-sm text-slate-400">Introuvable.</p>
+                                            <p className="px-3 py-2 text-sm text-stone-400">Introuvable.</p>
                                         ) : (
                                             filteredClients.map(c => (
                                                 <button
                                                     key={c.id}
                                                     type="button"
                                                     onMouseDown={() => selectClient(c)}
-                                                    className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-blue-50 transition"
+                                                    className="w-full text-left px-3 py-2 text-sm text-stone-700 hover:bg-emerald-50 transition"
                                                 >
                                                     <span className="font-medium">{c.full_name}</span>
-                                                    <span className="ml-2 text-xs font-mono text-slate-400">{c.cin}</span>
+                                                    <span className="ml-2 text-xs font-mono text-stone-400">{c.cin}</span>
                                                 </button>
                                             ))
                                         )}
@@ -267,27 +267,27 @@ export default function AjouterReservation() {
                 </div>
 
                 {/* Services additionnels */}
-                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-                    <h2 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
-                        <i className="ti ti-briefcase text-blue-500" /> Services additionnels
+                <div className="bg-white border border-stone-200 rounded-lg p-5 shadow-sm">
+                    <h2 className="text-sm font-semibold text-stone-700 mb-4 flex items-center gap-2">
+                        <i className="ti ti-briefcase text-emerald-500" /> Services additionnels
                     </h2>
                     {services.length === 0 ? (
-                        <p className="text-sm text-slate-400">Aucun service disponible.</p>
+                        <p className="text-sm text-stone-400">Aucun service disponible.</p>
                     ) : (
                         <div className="space-y-2">
                             {services.map(s => {
                                 const checked = s.id in selectedServices;
                                 return (
-                                    <div key={s.id} className="flex items-center gap-3 px-3 py-2 rounded-lg border border-slate-200">
+                                    <div key={s.id} className="flex items-center gap-3 px-3 py-2 rounded-md border border-stone-200">
                                         <input
                                             type="checkbox"
                                             checked={checked}
                                             onChange={() => toggleService(s.id)}
-                                            className="w-4 h-4 accent-blue-600"
+                                            className="w-4 h-4 accent-emerald-600"
                                         />
                                         <div className="flex-1">
-                                            <p className="text-sm font-medium text-slate-800">{s.serviceName}</p>
-                                            <p className="text-xs text-slate-400">{fmtPrice(s.price)} {s.priceType === 'per_km' ? '/ km' : s.priceType === 'per_day' ? '/ jour' : '(forfait)'}</p>
+                                            <p className="text-sm font-medium text-stone-800">{s.serviceName}</p>
+                                            <p className="text-xs text-stone-400">{fmtPrice(s.price)} {s.priceType === 'per_km' ? '/ km' : s.priceType === 'per_day' ? '/ jour' : '(forfait)'}</p>
                                         </div>
                                         {checked && (
                                             <input
@@ -296,7 +296,7 @@ export default function AjouterReservation() {
                                                 value={selectedServices[s.id]}
                                                 onChange={e => setServiceQty(s.id, e.target.value)}
                                                 placeholder={SERVICE_QTY_LABEL[s.priceType] || 'Quantité'}
-                                                className="w-24 bg-white border border-slate-300 px-2 py-1.5 rounded-lg text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition"
+                                                className="w-24 bg-white border border-stone-300 px-2 py-1.5 rounded-md text-sm focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition"
                                             />
                                         )}
                                     </div>
@@ -308,19 +308,19 @@ export default function AjouterReservation() {
 
                 {/* Récapitulatif */}
                 {days > 0 && form.carId && (
-                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-5">
-                        <h2 className="text-sm font-semibold text-slate-700 mb-3">Récapitulatif estimé</h2>
+                    <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-5">
+                        <h2 className="text-sm font-semibold text-stone-700 mb-3">Récapitulatif estimé</h2>
                         <div className="space-y-1.5 text-sm">
-                            <div className="flex justify-between text-slate-600">
+                            <div className="flex justify-between text-stone-600">
                                 <span>Durée</span><span>{days} jour{days > 1 ? 's' : ''}</span>
                             </div>
-                            <div className="flex justify-between text-slate-600">
+                            <div className="flex justify-between text-stone-600">
                                 <span>Prix de base ({fmtPrice(pricePerDay)}/j)</span><span>{fmtPrice(basePrice)}</span>
                             </div>
-                            <div className="flex justify-between text-slate-600">
+                            <div className="flex justify-between text-stone-600">
                                 <span>Services additionnels</span><span>{fmtPrice(servicesTotal)}</span>
                             </div>
-                            <div className="flex justify-between font-semibold text-slate-900 pt-1.5 border-t border-blue-100">
+                            <div className="flex justify-between font-semibold text-stone-900 pt-1.5 border-t border-emerald-100">
                                 <span>Total estimé</span><span>{fmtPrice(totalPrice)}</span>
                             </div>
                         </div>
@@ -332,14 +332,14 @@ export default function AjouterReservation() {
                     <button
                         type="button"
                         onClick={() => navigate('/reservations')}
-                        className="px-4 py-2 rounded-lg border border-slate-300 text-slate-600 text-sm font-medium hover:bg-slate-50 transition"
+                        className="px-4 py-2 rounded-md border border-stone-300 text-stone-600 text-sm font-medium hover:bg-stone-50 transition"
                     >
                         Annuler
                     </button>
                     <button
                         type="submit"
                         disabled={submitting}
-                        className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium transition shadow-sm"
+                        className="inline-flex items-center gap-2 px-5 py-2 rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium transition shadow-sm"
                     >
                         {submitting ? (
                             <>

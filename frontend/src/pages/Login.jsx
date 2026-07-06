@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import api from '../api/api';
 
 // Page de connexion : authentifie l'utilisateur via l'API et redirige vers le dashboard.
@@ -29,37 +30,52 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-screen bg-[#0b1326] relative overflow-hidden flex flex-col">
+        <div className="min-h-screen bg-emerald-950 relative overflow-hidden flex flex-col">
 
             {/* Logo */}
-            <div className="relative z-10 flex items-center gap-2.5 px-8 py-7">
-                <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center flex-shrink-0">
+            <motion.div
+                initial={{ opacity: 0, y: -16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+                className="relative z-10 flex items-center gap-2.5 px-8 py-7"
+            >
+                <div className="w-8 h-8 rounded-md bg-emerald-600 flex items-center justify-center flex-shrink-0">
                     <i className="ti ti-car text-white text-[15px]" />
                 </div>
                 <p className="font-bold text-white text-sm tracking-widest uppercase">CarRental</p>
-            </div>
+            </motion.div>
 
             {/* Décor : points / éclats dispersés */}
-            <span className="absolute top-[28%] left-[12%] w-2 h-2 rounded-full bg-slate-600/60" />
-            <span className="absolute top-[60%] left-[20%] w-1.5 h-1.5 rounded-full bg-slate-600/50" />
-            <span className="absolute top-[40%] right-[15%] w-1.5 h-1.5 rounded-full bg-slate-600/50" />
-            <span className="absolute top-[68%] right-[10%] w-2 h-2 rounded-full bg-slate-600/60" />
-            <i className="ti ti-sparkles absolute top-[22%] right-[22%] text-slate-600/40 text-[18px]" />
-            <i className="ti ti-sparkles absolute bottom-[30%] left-[8%] text-slate-600/30 text-[14px]" />
+            <span className="absolute top-[28%] left-[12%] w-2 h-2 rounded-full bg-stone-600/60" />
+            <span className="absolute top-[60%] left-[20%] w-1.5 h-1.5 rounded-full bg-stone-600/50" />
+            <span className="absolute top-[40%] right-[15%] w-1.5 h-1.5 rounded-full bg-stone-600/50" />
+            <span className="absolute top-[68%] right-[10%] w-2 h-2 rounded-full bg-stone-600/60" />
+            <i className="ti ti-sparkles absolute top-[22%] right-[22%] text-stone-600/40 text-[18px]" />
+            <i className="ti ti-sparkles absolute bottom-[30%] left-[8%] text-stone-600/30 text-[14px]" />
 
             {/* Contenu central */}
-            <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 -mt-8 pb-24">
-                <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center mb-5">
+            <motion.div
+                initial={{ opacity: 0, y: 32, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: 'spring', stiffness: 260, damping: 22, delay: 0.1 }}
+                className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 -mt-8 pb-24"
+            >
+                <motion.div
+                    initial={{ scale: 0, rotate: -30 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: 'spring', stiffness: 260, damping: 16, delay: 0.2 }}
+                    className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center mb-5"
+                >
                     <i className="ti ti-car text-white text-[26px]" />
-                </div>
+                </motion.div>
                 <h1 className="text-3xl sm:text-4xl font-semibold text-white mb-2 text-center">Connexion</h1>
-                <p className="text-sm text-slate-400 mb-8 text-center max-w-xs">
+                <p className="text-sm text-stone-400 mb-8 text-center max-w-xs">
                     Connectez-vous pour gérer votre flotte de location.
                 </p>
 
                 <form onSubmit={handleLogin} className="w-full max-w-sm space-y-3.5">
                     {error && (
-                        <div className="flex items-center gap-2 justify-center bg-red-500/10 text-red-400 text-sm px-3.5 py-2.5 rounded-xl border border-red-500/20">
+                        <div className="flex items-center gap-2 justify-center bg-red-500/10 text-red-400 text-sm px-3.5 py-2.5 rounded-lg border border-red-500/20">
                             <i className="ti ti-alert-circle text-[15px] flex-shrink-0" />
                             {error}
                         </div>
@@ -70,7 +86,7 @@ export default function Login() {
                         onChange={e => setEmail(e.target.value)}
                         placeholder="Adresse email"
                         required
-                        className="w-full bg-white/5 border border-white/10 text-slate-100 placeholder-slate-500 px-4 py-3 rounded-xl text-sm text-center focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 transition"
+                        className="w-full bg-white/5 border border-white/10 text-stone-100 placeholder-stone-500 px-4 py-3 rounded-lg text-sm text-center focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 transition"
                     />
                     <input
                         type="password"
@@ -78,27 +94,30 @@ export default function Login() {
                         onChange={e => setPassword(e.target.value)}
                         placeholder="Mot de passe"
                         required
-                        className="w-full bg-white/5 border border-white/10 text-slate-100 placeholder-slate-500 px-4 py-3 rounded-xl text-sm text-center focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 transition"
+                        className="w-full bg-white/5 border border-white/10 text-stone-100 placeholder-stone-500 px-4 py-3 rounded-lg text-sm text-center focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 transition"
                     />
-                    <button
+                    <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.96 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 18 }}
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-500 hover:to-blue-400 disabled:opacity-50 text-white py-3.5 rounded-full text-sm font-semibold transition-all shadow-lg shadow-indigo-900/40"
+                        className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 disabled:opacity-50 text-white py-3.5 rounded-full text-sm font-semibold transition-all shadow-lg shadow-emerald-900/40"
                     >
                         {loading ? 'Connexion…' : 'Se connecter'}
-                    </button>
+                    </motion.button>
                 </form>
-            </div>
+            </motion.div>
 
             {/* Vagues décoratives */}
             <div className="absolute bottom-0 left-0 w-full h-40 sm:h-48 pointer-events-none">
                 <svg className="absolute bottom-0 w-full h-full" viewBox="0 0 1440 220" preserveAspectRatio="none">
-                    <path fill="#1e293b" d="M0,90 C220,150 420,30 720,70 C1020,110 1240,40 1440,90 L1440,220 L0,220 Z" />
+                    <path fill="#0d2b1d" d="M0,90 C220,150 420,30 720,70 C1020,110 1240,40 1440,90 L1440,220 L0,220 Z" />
                 </svg>
                 <svg className="absolute bottom-0 w-full h-full" viewBox="0 0 1440 220" preserveAspectRatio="none">
-                    <path fill="#f8fafc" d="M0,140 C260,190 480,110 720,140 C980,172 1200,110 1440,150 L1440,220 L0,220 Z" />
+                    <path fill="#fafaf9" d="M0,140 C260,190 480,110 720,140 C980,172 1200,110 1440,150 L1440,220 L0,220 Z" />
                 </svg>
-                <p className="absolute bottom-3 w-full text-center text-[11px] text-slate-400">
+                <p className="absolute bottom-3 w-full text-center text-[11px] text-stone-400">
                     © 2026 CarRental. Tous droits réservés.
                 </p>
             </div>

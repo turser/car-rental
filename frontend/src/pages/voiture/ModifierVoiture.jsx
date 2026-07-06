@@ -11,12 +11,12 @@ const FUEL_OPTIONS = [
 
 const IMAGE_BASE = 'https://car-rental-production-59c6.up.railway.app/storage/';
 
-const inputCls = 'w-full bg-white border border-slate-300 text-slate-900 placeholder-slate-400 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition';
+const inputCls = 'w-full bg-white border border-stone-300 text-stone-900 placeholder-stone-400 px-3 py-2 rounded-md text-sm focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition';
 
 function Field({ label, required, children }) {
     return (
         <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">
+            <label className="block text-xs font-medium text-stone-600 mb-1.5">
                 {label}{required && <span className="text-red-500 ml-0.5">*</span>}
             </label>
             {children}
@@ -110,8 +110,8 @@ export default function ModifierVoiture() {
 
     if (loading) return (
         <div className="max-w-3xl mx-auto space-y-4">
-            <div className="h-7 w-56 bg-slate-200 rounded animate-pulse" />
-            {[...Array(3)].map((_, i) => <div key={i} className="h-40 bg-slate-200 rounded-xl animate-pulse" />)}
+            <div className="h-7 w-56 bg-stone-200 rounded-sm animate-pulse" />
+            {[...Array(3)].map((_, i) => <div key={i} className="h-40 bg-stone-200 rounded-lg animate-pulse" />)}
         </div>
     );
 
@@ -122,27 +122,27 @@ export default function ModifierVoiture() {
                 <button
                     type="button"
                     onClick={() => navigate(`/voitures/${id}`)}
-                    className="w-8 h-8 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:bg-slate-50 transition"
+                    className="w-8 h-8 rounded-md border border-stone-200 bg-white flex items-center justify-center text-stone-500 hover:bg-stone-50 transition"
                 >
                     <i className="ti ti-arrow-left text-[15px]" />
                 </button>
                 <div>
-                    <h1 className="text-xl font-semibold text-slate-900">Modifier la voiture</h1>
-                    <p className="text-sm text-slate-500 mt-0.5">Mettez à jour les informations du véhicule</p>
+                    <h1 className="text-xl font-semibold text-stone-900">Modifier la voiture</h1>
+                    <p className="text-sm text-stone-500 mt-0.5">Mettez à jour les informations du véhicule</p>
                 </div>
             </div>
 
             {error && (
-                <div className="flex items-start gap-2 bg-red-50 text-red-600 px-4 py-3 rounded-xl border border-red-200 text-sm mb-5">
+                <div className="flex items-start gap-2 bg-red-50 text-red-600 px-4 py-3 rounded-lg border border-red-200 text-sm mb-5">
                     <i className="ti ti-alert-circle mt-0.5 flex-shrink-0" /> {error}
                 </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Informations générales */}
-                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-                    <h2 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
-                        <i className="ti ti-car text-indigo-500" /> Informations générales
+                <div className="bg-white border border-stone-200 rounded-lg p-5 shadow-sm">
+                    <h2 className="text-sm font-semibold text-stone-700 mb-4 flex items-center gap-2">
+                        <i className="ti ti-car text-emerald-500" /> Informations générales
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <Field label="Marque" required>
@@ -191,9 +191,9 @@ export default function ModifierVoiture() {
                 </div>
 
                 {/* Données financières & techniques */}
-                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-                    <h2 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
-                        <i className="ti ti-coin text-indigo-500" /> Données financières &amp; techniques
+                <div className="bg-white border border-stone-200 rounded-lg p-5 shadow-sm">
+                    <h2 className="text-sm font-semibold text-stone-700 mb-4 flex items-center gap-2">
+                        <i className="ti ti-coin text-emerald-500" /> Données financières &amp; techniques
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <Field label="Date d'achat" required>
@@ -245,19 +245,19 @@ export default function ModifierVoiture() {
                 </div>
 
                 {/* Photos */}
-                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-                    <h2 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
-                        <i className="ti ti-photo text-indigo-500" /> Photos du véhicule
+                <div className="bg-white border border-stone-200 rounded-lg p-5 shadow-sm">
+                    <h2 className="text-sm font-semibold text-stone-700 mb-4 flex items-center gap-2">
+                        <i className="ti ti-photo text-emerald-500" /> Photos du véhicule
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* Photo principale */}
                         <div>
-                            <p className="text-xs font-medium text-slate-600 mb-2">
+                            <p className="text-xs font-medium text-stone-600 mb-2">
                                 Photo principale
                             </p>
                             <label className="block cursor-pointer">
                                 {primaryPreview ? (
-                                    <div className="relative group w-full h-40 rounded-lg overflow-hidden border border-slate-200">
+                                    <div className="relative group w-full h-40 rounded-md overflow-hidden border border-stone-200">
                                         <img src={primaryPreview} alt="Aperçu" className="w-full h-full object-cover" />
                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
                                             <span className="text-white text-xs font-medium flex items-center gap-1">
@@ -266,9 +266,9 @@ export default function ModifierVoiture() {
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="w-full h-40 rounded-lg border-2 border-dashed border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/30 transition flex flex-col items-center justify-center gap-1.5">
-                                        <i className="ti ti-upload text-slate-300 text-[28px]" />
-                                        <p className="text-xs text-slate-400">Cliquer pour sélectionner</p>
+                                    <div className="w-full h-40 rounded-md border-2 border-dashed border-stone-200 hover:border-emerald-300 hover:bg-emerald-50/30 transition flex flex-col items-center justify-center gap-1.5">
+                                        <i className="ti ti-upload text-stone-300 text-[28px]" />
+                                        <p className="text-xs text-stone-400">Cliquer pour sélectionner</p>
                                     </div>
                                 )}
                                 <input
@@ -282,15 +282,15 @@ export default function ModifierVoiture() {
 
                         {/* Photos supplémentaires */}
                         <div>
-                            <p className="text-xs font-medium text-slate-600 mb-2">
+                            <p className="text-xs font-medium text-stone-600 mb-2">
                                 Ajouter des photos
                             </p>
                             <label className="block cursor-pointer">
-                                <div className="w-full h-40 rounded-lg border-2 border-dashed border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/30 transition overflow-hidden relative flex flex-col items-center justify-center gap-1.5">
+                                <div className="w-full h-40 rounded-md border-2 border-dashed border-stone-200 hover:border-emerald-300 hover:bg-emerald-50/30 transition overflow-hidden relative flex flex-col items-center justify-center gap-1.5">
                                     {imagePreviews.length > 0 ? (
                                         <div className="grid grid-cols-3 gap-1 p-2 w-full h-full">
                                             {imagePreviews.slice(0, 6).map((src, i) => (
-                                                <img key={i} src={src} alt="" className="w-full h-full object-cover rounded" />
+                                                <img key={i} src={src} alt="" className="w-full h-full object-cover rounded-sm" />
                                             ))}
                                             {imagePreviews.length > 6 && (
                                                 <div className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded-full">
@@ -300,8 +300,8 @@ export default function ModifierVoiture() {
                                         </div>
                                     ) : (
                                         <>
-                                            <i className="ti ti-photos text-slate-300 text-[28px]" />
-                                            <p className="text-xs text-slate-400">Sélectionner plusieurs photos</p>
+                                            <i className="ti ti-photos text-stone-300 text-[28px]" />
+                                            <p className="text-xs text-stone-400">Sélectionner plusieurs photos</p>
                                         </>
                                     )}
                                 </div>
@@ -314,7 +314,7 @@ export default function ModifierVoiture() {
                                 />
                             </label>
                             {imagePreviews.length > 0 && (
-                                <p className="text-xs text-slate-400 mt-1.5">{imagePreviews.length} photo{imagePreviews.length > 1 ? 's' : ''} sélectionnée{imagePreviews.length > 1 ? 's' : ''}</p>
+                                <p className="text-xs text-stone-400 mt-1.5">{imagePreviews.length} photo{imagePreviews.length > 1 ? 's' : ''} sélectionnée{imagePreviews.length > 1 ? 's' : ''}</p>
                             )}
                         </div>
                     </div>
@@ -325,14 +325,14 @@ export default function ModifierVoiture() {
                     <button
                         type="button"
                         onClick={() => navigate(`/voitures/${id}`)}
-                        className="px-4 py-2 rounded-lg border border-slate-300 text-slate-600 text-sm font-medium hover:bg-slate-50 transition"
+                        className="px-4 py-2 rounded-md border border-stone-300 text-stone-600 text-sm font-medium hover:bg-stone-50 transition"
                     >
                         Annuler
                     </button>
                     <button
                         type="submit"
                         disabled={submitting}
-                        className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium transition shadow-sm"
+                        className="inline-flex items-center gap-2 px-5 py-2 rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium transition shadow-sm"
                     >
                         {submitting ? (
                             <>
