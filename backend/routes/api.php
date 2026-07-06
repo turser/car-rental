@@ -64,7 +64,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::apiResource('rentals', RentalController::class);
 
-    Route::apiResource('rentalexension',RentalExtensionController::class);
+    Route::post('rental/{rental}/exension',[RentalExtensionController::class,'store']);
     
     Route::post('/rentals/{rental}/payments', [RentalController::class, 'addPayment']);
     Route::patch('/rentals/{rental}/cancel', [RentalController::class, 'cancel']);
