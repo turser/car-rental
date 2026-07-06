@@ -19,4 +19,18 @@ class Service extends Model
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();  
 }
+
+public function rentals()
+{
+    return $this->belongsToMany(
+        Rental::class,
+        'rental_services'
+    )
+    ->withPivot([
+        'quantity',
+        'unit_price',
+        'total_price'
+    ])
+    ->withTimestamps();
+}
 }

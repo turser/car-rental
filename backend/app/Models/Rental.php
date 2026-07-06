@@ -35,4 +35,18 @@ public function car()
 {
     return $this->belongsTo(Car::class);
 }
+
+public function services()
+{
+    return $this->belongsToMany(
+        Service::class,
+        'rental_services'
+    )
+    ->withPivot([
+        'quantity',
+        'unit_price',
+        'total_price'
+    ])
+    ->withTimestamps();
+}
 }
