@@ -45,11 +45,11 @@ class RentalExtensionController extends Controller
         }
 
         if ($rental->status !== 'active') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Only active rentals can be extended.',
-                ], 422);
-            }
+            return response()->json([
+                'success' => false,
+                'message' => 'Only active rentals can be extended.',
+            ], 422);
+        }
 
         $safetyDate = Carbon::parse($validated['newEndDate'])->addDays(10);
         $expectedReturnYear = Carbon::parse($validated['newEndDate'])->year;
@@ -89,12 +89,21 @@ class RentalExtensionController extends Controller
             ], 422);
         }
 
-        $oldEndDate = $rental->end_date;
+        // ============================================================
+        // ✅ Determine old_end_date:
+        // If rental has extensions → old_end_date = last extension's new_end_date
+        // If rental has no extensions → old_end_date = rental's original end_date
+        // ============================================================
+        $lastExtension = $rental->extensions()->latest()->first();
+
+        $oldEndDate = $lastExtension
+            ? $lastExtension->new_end_date   // ✅ last extension end date
+            : $rental->end_date;             // ✅ original rental end date
+
         $extendServices = $validated['extendServices'] ?? false;
 
         $newDays = Carbon::parse($rental->start_date)
             ->diffInDays(Carbon::parse($validated['newEndDate'])) + 1;
-
         $newBasePrice = $newDays * $rental->price_per_day;
         $servicesTotal = 0;
 
@@ -114,53 +123,49 @@ class RentalExtensionController extends Controller
             }
         }
 
-
         $newTotalPrice = $newBasePrice + $servicesTotal;
-
 
         DB::beginTransaction();
 
-    try {
-        // Log the extension
-        RentalExtension::create([
-            'rental_id'    => $rental->id,
-            'old_end_date' => $oldEndDate,
-            'new_end_date' => $validated['newEndDate'],
-        ]);
+        try {
+            RentalExtension::create([
+                'rental_id' => $rental->id,
+                'old_end_date' => $oldEndDate,  // ✅ correct old date
+                'new_end_date' => $validated['newEndDate'],
+            ]);
 
-        $rental->update([
-            'end_date'    => $validated['newEndDate'],
-            'total_price' => $newTotalPrice,
-        ]);
+            $rental->update([
+                'end_date' => $validated['newEndDate'],
+                'total_price' => $newTotalPrice,
+            ]);
 
-        DB::commit();
+            DB::commit();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Rental extended successfully.',
-            'data'    => [
-                'rentalId'        => $rental->id,
-                'oldEndDate'      => $oldEndDate,
-                'newEndDate'      => $rental->end_date,
-                'newDays'         => $newDays,
-                'pricePerDay'     => $rental->price_per_day,
-                'newBasePrice'    => $newBasePrice,
-                'servicesTotal'   => $servicesTotal,
-                'servicesExtended'=> $extendServices,
-                'newTotalPrice'   => $rental->total_price,
-            ],
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Rental extended successfully.',
+                'data' => [
+                    'rentalId' => $rental->id,
+                    'oldEndDate' => $oldEndDate,
+                    'newEndDate' => $rental->end_date,
+                    'newDays' => $newDays,
+                    'pricePerDay' => $rental->price_per_day,
+                    'newBasePrice' => $newBasePrice,
+                    'servicesTotal' => $servicesTotal,
+                    'servicesExtended' => $extendServices,
+                    'newTotalPrice' => $rental->total_price,
+                ],
+            ]);
 
-    } catch (\Exception $e) {
-        DB::rollBack();
+        } catch (\Exception $e) {
+            DB::rollBack();
 
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to extend rental.',
-            'error'   => $e->getMessage(),
-        ], 500);
-    }
-
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to extend rental.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**

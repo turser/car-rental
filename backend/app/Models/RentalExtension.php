@@ -11,10 +11,9 @@ class RentalExtension extends Model
 
          protected $fillable = [
         'rental_id',
-        'service_id',
-        'quantity',
-        'unit_price',
-        'total_price',
+        'old_end_date',
+        'new',
+        
     ];
 
        public function rental()
