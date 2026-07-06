@@ -54,4 +54,9 @@ class Rental extends Model
     {
         return $this->hasMany(RentalExtension::class);
     }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
 }

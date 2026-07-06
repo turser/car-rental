@@ -15,4 +15,9 @@ class Payment extends Model
         'payment_method' , 
         'payment_date',
     ];
+
+    public function car()
+{
+    return $this->belongsTo(Car::class);
+}
 }
