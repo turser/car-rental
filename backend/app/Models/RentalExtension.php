@@ -12,7 +12,7 @@ class RentalExtension extends Model
          protected $fillable = [
         'rental_id',
         'old_end_date',
-        'new',
+        'new_end_date',
         
     ];
 
