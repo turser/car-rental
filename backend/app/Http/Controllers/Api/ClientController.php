@@ -13,31 +13,24 @@ class ClientController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
-    {
-        $clients = Client::whereHas(
-            'rentals',
-            function ($query) {
+    public function index(): JsonResponse
+{
+    $agencyId = auth()->user()->agency_id;
 
-                $query->where(
-                    'agency_id',
-                    auth()->user()->agency_id
-                );
-            }
-        )
-            ->with([
-                'rentals' => function ($query) {
+    $clients = Client::withCount([
+                    'rentals' => fn($q) => $q->where('agency_id', $agencyId)
+                ])
+                ->with([
+                    'rentals' => fn($q) => $q->where('agency_id', $agencyId)
+                ])
+                ->latest()
+                ->paginate(10);
 
-                    $query->where(
-                        'agency_id',
-                        auth()->user()->agency_id
-                    );
-                }
-            ])
-            ->get();
-
-        return response()->json($clients);
-    }
+    return response()->json([
+        'success' => true,
+        'data'    => $clients,
+    ]);
+}
 
     /**
      * Store a newly created resource in storage.

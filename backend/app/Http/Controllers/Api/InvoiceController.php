@@ -80,7 +80,7 @@ public function generate(Rental $rental): JsonResponse
                 'id'          => $rental->car->id,
                 'brand'       => $rental->car->brand,
                 'model'       => $rental->car->model,
-                'plateNumber' => $rental->car->plate_number,
+                'plateNumber' => $rental->car->registration_number,
             ],
 
             // Rental period
