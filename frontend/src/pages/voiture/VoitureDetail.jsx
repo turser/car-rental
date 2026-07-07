@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../api/api';
+import { translateError } from '../../utils/translateError';
 
 const IMAGE_BASE = 'https://car-rental-production-59c6.up.railway.app/storage/';
 
@@ -74,7 +75,7 @@ export default function VoitureDetail() {
             await api.delete(`/cars/${id}`);
             navigate('/voitures');
         } catch (err) {
-            setDeleteError(err.response?.data?.message || 'Erreur lors de la suppression.');
+            setDeleteError(translateError(err.response?.data?.message) || 'Erreur lors de la suppression.');
             setDeleting(false);
         }
     };

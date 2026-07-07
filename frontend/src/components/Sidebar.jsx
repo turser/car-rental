@@ -13,9 +13,9 @@ const sections = [
         ],
     },
     {
-        title: 'Flotte',
+        title: 'Réservations',
         links: [
-            { to: '/voitures', label: 'Voitures', icon: 'ti-car' },
+            { to: '/reservations', label: 'Réservations', icon: 'ti-calendar-event' },
         ],
     },
     {
@@ -27,7 +27,7 @@ const sections = [
     {
         title: 'Gestion',
         links: [
-            { to: '/reservations', label: 'Réservations', icon: 'ti-calendar-event' },
+            { to: '/voitures',     label: 'Voitures',      icon: 'ti-car' },
             { to: '/factures',     label: 'Factures',     icon: 'ti-receipt' },
             { to: '/impots',       label: 'Impôts',        icon: 'ti-receipt-tax' },
             { to: '/assurance',    label: 'Assurance',     icon: 'ti-shield-check' },

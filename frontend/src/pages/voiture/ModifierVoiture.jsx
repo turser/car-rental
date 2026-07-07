@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/api';
+import { translateError, translateErrors } from '../../utils/translateError';
 
 const FUEL_OPTIONS = [
     { value: 'diesel',   label: 'Diesel' },
@@ -99,9 +100,9 @@ export default function ModifierVoiture() {
         } catch (err) {
             const errors = err.response?.data?.errors;
             if (errors) {
-                setError(Object.values(errors).flat().join(' — '));
+                setError(translateErrors(errors));
             } else {
-                setError(err.response?.data?.message || 'Erreur lors de la modification.');
+                setError(translateError(err.response?.data?.message) || 'Erreur lors de la modification.');
             }
         } finally {
             setSubmitting(false);
