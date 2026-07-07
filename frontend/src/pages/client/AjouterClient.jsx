@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/api';
+import { translateError, translateErrors } from '../../utils/translateError';
 
 const inputCls = 'w-full bg-white border border-stone-300 text-stone-900 placeholder-stone-400 px-3 py-2 rounded-md text-sm focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition';
 
@@ -42,9 +43,9 @@ export default function AjouterClient() {
         } catch (err) {
             const errors = err.response?.data?.errors;
             if (errors) {
-                setError(Object.values(errors).flat().join(' — '));
+                setError(translateErrors(errors));
             } else {
-                setError(err.response?.data?.message || "Erreur lors de l'ajout.");
+                setError(translateError(err.response?.data?.message) || "Erreur lors de l'ajout.");
             }
         } finally {
             setSubmitting(false);

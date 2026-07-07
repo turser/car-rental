@@ -19,6 +19,9 @@ const MONTH_NAMES = [
 const toKey = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const isSameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
+const fmtDate  = d => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
+const fmtPrice = p => p ? parseFloat(p).toLocaleString() + ' MAD' : '—';
+
 // Construit la grille de 42 jours (6 semaines, lundi en premier) couvrant le mois affiché.
 function buildGrid(year, month) {
     const firstOfMonth = new Date(year, month, 1);
@@ -42,6 +45,7 @@ export default function ReservationsCalendrier() {
         const now = new Date();
         return new Date(now.getFullYear(), now.getMonth(), 1);
     });
+    const [selectedRental, setSelectedRental] = useState(null);
 
     useEffect(() => {
         api.get('/rentals')
@@ -196,14 +200,19 @@ export default function ReservationsCalendrier() {
                                 <div className="space-y-1">
                                     {dayRentals.slice(0, 3).map(r => {
                                         const rs = RENTAL_STATUS[r.status] || { label: r.status, cls: 'bg-stone-100 text-stone-600' };
+                                        const carLabel = [r.car?.brand, r.car?.model].filter(Boolean).join(' ') || `#${r.id}`;
                                         return (
-                                            <p
+                                            <motion.button
                                                 key={r.id}
-                                                title={`${r.client?.full_name || ''} — ${r.car?.brand || ''} ${r.car?.model || ''}`}
-                                                className={`truncate px-1.5 py-0.5 rounded-sm text-[11px] font-medium ${rs.cls}`}
+                                                type="button"
+                                                whileHover={{ scale: 1.03 }}
+                                                whileTap={{ scale: 0.97 }}
+                                                onClick={() => setSelectedRental(r)}
+                                                title={`${carLabel} — ${r.client?.full_name || ''}`}
+                                                className={`w-full text-left truncate px-1.5 py-0.5 rounded-sm text-[11px] font-medium ${rs.cls} hover:brightness-95 transition`}
                                             >
-                                                {r.client?.full_name || `#${r.id}`}
-                                            </p>
+                                                {carLabel}
+                                            </motion.button>
                                         );
                                     })}
                                     {dayRentals.length > 3 && (
@@ -216,6 +225,83 @@ export default function ReservationsCalendrier() {
                 </motion.div>
                 </AnimatePresence>
             </div>
+
+            {/* Popup détails réservation */}
+            <AnimatePresence>
+                {selectedRental && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setSelectedRental(null)}
+                        className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.92, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.92, y: 20 }}
+                            transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+                            onClick={e => e.stopPropagation()}
+                            className="bg-white rounded-lg shadow-lg w-full max-w-sm overflow-hidden"
+                        >
+                            <div className="flex items-start justify-between px-5 py-4 border-b border-stone-100">
+                                <div className="min-w-0">
+                                    <p className="font-semibold text-stone-900 truncate">
+                                        {selectedRental.car?.brand} {selectedRental.car?.model}
+                                    </p>
+                                    <p className="font-mono text-xs text-stone-400 mt-0.5">
+                                        {selectedRental.car?.registration_number}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setSelectedRental(null)}
+                                    className="w-7 h-7 flex-shrink-0 rounded-md flex items-center justify-center text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition"
+                                >
+                                    <i className="ti ti-x text-[16px]" />
+                                </button>
+                            </div>
+
+                            <div className="px-5 py-4 space-y-3 text-sm">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-stone-500">Statut</span>
+                                    <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${(RENTAL_STATUS[selectedRental.status] || {}).cls || 'bg-stone-100 text-stone-600'}`}>
+                                        {(RENTAL_STATUS[selectedRental.status] || {}).label || selectedRental.status}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-stone-500">Client</span>
+                                    <span className="font-medium text-stone-900">{selectedRental.client?.full_name || '—'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-stone-500">Période</span>
+                                    <span className="text-stone-700">{fmtDate(selectedRental.start_date)} → {fmtDate(selectedRental.end_date)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-stone-500">Prix / jour</span>
+                                    <span className="text-stone-700">{fmtPrice(selectedRental.price_per_day)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-stone-500">Payé</span>
+                                    <span className="text-stone-700">{fmtPrice(selectedRental.paid_amount)}</span>
+                                </div>
+                                <div className="flex justify-between pt-2 border-t border-stone-100 font-semibold">
+                                    <span className="text-stone-900">Total</span>
+                                    <span className="text-stone-900">{fmtPrice(selectedRental.total_price)}</span>
+                                </div>
+                            </div>
+
+                            <div className="px-5 py-3 bg-stone-50 border-t border-stone-100 flex justify-end">
+                                <button
+                                    onClick={() => navigate('/reservations')}
+                                    className="text-xs font-medium text-emerald-600 hover:text-emerald-800 transition"
+                                >
+                                    Voir dans la liste →
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

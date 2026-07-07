@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/api';
+import { translateError, translateErrors } from '../../utils/translateError';
 
 const FUEL_OPTIONS = [
     { value: 'diesel',   label: 'Diesel' },
@@ -73,9 +74,9 @@ export default function AjouterVoiture() {
         } catch (err) {
             const errors = err.response?.data?.errors;
             if (errors) {
-                setError(Object.values(errors).flat().join(' — '));
+                setError(translateErrors(errors));
             } else {
-                setError(err.response?.data?.message || "Erreur lors de l'ajout.");
+                setError(translateError(err.response?.data?.message) || "Erreur lors de l'ajout.");
             }
         } finally {
             setSubmitting(false);
