@@ -62,15 +62,15 @@ public function generate(Rental $rental): JsonResponse
             // Agency info
             'agency' => [
                 'name'    => $rental->agency->name,
+                'ville'    => $rental->agency->city,
                 'address' => $rental->agency->address ?? null,
                 'phone'   => $rental->agency->phone   ?? null,
-                'email'   => $rental->agency->email   ?? null,
             ],
 
             // Client info
             'client' => [
                 'id'    => $rental->client->id,
-                'name'  => $rental->client->name,
+                'name'  => $rental->client->full_name,
                 'phone' => $rental->client->phone ?? null,
                 'email' => $rental->client->email ?? null,
             ],
