@@ -20,16 +20,16 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AgencySeeder::class,
             UserSeeder::class,
-            CarSeeder::class,
+            //CarSeeder::class,
             ClientSeeder::class,
-            RentalSeeder::class,
+            //RentalSeeder::class,
             ServiceSeeder::class,
-            RentalServiceSeeder::class,
-            PaymentSeeder::class,
-            InsuranceSeeder::class,
-            MaintenanceSeeder::class,
-            TaxSeeder::class,
-            CarImageSeeder::class,
+            //RentalServiceSeeder::class,
+            //PaymentSeeder::class,
+            //InsuranceSeeder::class,
+            //MaintenanceSeeder::class,
+            //TaxSeeder::class,
+            //CarImageSeeder::class,
         ]);
     }
 }
