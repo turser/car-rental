@@ -53,7 +53,12 @@ export default function AjouterReservation() {
         Promise.all([api.get('/createrental'), api.get('/clients')])
             .then(([createRes, clientsRes]) => {
                 const eligibleIds = new Set(createRes.data.data.clients.map(c => c.id));
-                setClients(clientsRes.data.filter(c => eligibleIds.has(c.id)));
+                const cData = clientsRes.data;
+                const clientsList = Array.isArray(cData) ? cData
+                    : Array.isArray(cData?.data) ? cData.data
+                    : Array.isArray(cData?.data?.data) ? cData.data.data
+                    : [];
+                setClients(clientsList.filter(c => eligibleIds.has(c.id)));
                 setCars(createRes.data.data.cars);
                 setServices(createRes.data.data.services);
             })

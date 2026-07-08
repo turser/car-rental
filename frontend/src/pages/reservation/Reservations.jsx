@@ -76,10 +76,18 @@ function ReservationCard({ r, navigate, index }) {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-5 mt-3 pt-3 border-t border-stone-100 text-xs text-stone-500">
-                        <span>Prix/jour <span className="font-semibold text-stone-700">{fmtPrice(r.price_per_day)}</span></span>
-                        <span>Total <span className="font-semibold text-stone-900">{fmtPrice(r.total_price)}</span></span>
-                        <span>Payé <span className="font-semibold text-emerald-600">{fmtPrice(r.paid_amount)}</span></span>
+                    <div className="flex items-center justify-between gap-5 mt-3 pt-3 border-t border-stone-100 text-xs text-stone-500">
+                        <div className="flex items-center gap-5">
+                            <span>Prix/jour <span className="font-semibold text-stone-700">{fmtPrice(r.price_per_day)}</span></span>
+                            <span>Total <span className="font-semibold text-stone-900">{fmtPrice(r.total_price)}</span></span>
+                            <span>Payé <span className="font-semibold text-emerald-600">{fmtPrice(r.paid_amount)}</span></span>
+                        </div>
+                        <button
+                            onClick={() => navigate(`/reservations/${r.id}/facture`)}
+                            className="inline-flex items-center gap-1.5 text-stone-500 hover:text-emerald-600 font-medium transition-colors flex-shrink-0"
+                        >
+                            <i className="ti ti-receipt text-[14px]" /> Facture
+                        </button>
                     </div>
                 </div>
             </div>

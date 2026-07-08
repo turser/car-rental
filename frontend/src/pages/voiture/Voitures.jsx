@@ -70,7 +70,7 @@ function CarListCard({ car, navigate, index }) {
                 <div className="w-52 h-40 flex-shrink-0 bg-stone-100 border-r border-stone-200 flex items-center justify-center overflow-hidden">
                     {img ? (
                         <img
-                            src={IMAGE_BASE + img.image_path}
+                            src={img.image_path}
                             alt={`${car.brand} ${car.model}`}
                             loading="lazy"
                             width={208}

@@ -14,6 +14,7 @@ import maintenanceRoutes from './routes/maintenanceRoutes';
 import impotRoutes from './routes/impotRoutes';
 import serviceRoutes from './routes/serviceRoutes';
 import reservationRoutes from './routes/reservationRoutes';
+import userRoutes from './routes/userRoutes';
 
 // Point d'entrée de l'application : définit toutes les routes (URLs) et leurs pages associées.
 export default function App() {
@@ -51,6 +52,7 @@ export default function App() {
                         {impotRoutes.map(r => <Route key={r.path} path={r.path} element={r.element} />)}
                         {serviceRoutes.map(r => <Route key={r.path} path={r.path} element={r.element} />)}
                         {reservationRoutes.map(r => <Route key={r.path} path={r.path} element={r.element} />)}
+                        {userRoutes.map(r => <Route key={r.path} path={r.path} element={r.element} />)}
                     </Route>
                     {/* Toute URL inconnue redirige vers la page d'accueil */}
                     <Route path="*" element={<Navigate to="/" replace />} />
