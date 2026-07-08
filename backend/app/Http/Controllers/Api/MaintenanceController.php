@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Car;
 use App\Models\Maintenance;
 use DB;
 use Illuminate\Http\JsonResponse;
@@ -15,26 +16,26 @@ class MaintenanceController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index() : JsonResponse
-{
-    $Maintenance = Maintenance::with('car')
-        ->latest()
-        ->get()
-        ->map(function ($maintenance) {
+    public function index(): JsonResponse
+    {
+        $Maintenance = Maintenance::with('car')
+            ->latest()
+            ->get()
+            ->map(function ($maintenance) {
 
-            return [
-                'id' => $maintenance->id,
-                'carId' => $maintenance->car_id,
-                'maintenanceType' => $maintenance->type,
-                'maintenanceDate' => $maintenance->date,
-                'kilométrage' => $maintenance->mileage,
-                'cost' => $maintenance->cost,
-                'nextMaintenanceDate' => $maintenance->next_maintenance_date,
-            ];
-        });
+                return [
+                    'id' => $maintenance->id,
+                    'carId' => $maintenance->car_id,
+                    'maintenanceType' => $maintenance->type,
+                    'maintenanceDate' => $maintenance->date,
+                    'kilométrage' => $maintenance->mileage,
+                    'cost' => $maintenance->cost,
+                    'nextMaintenanceDate' => $maintenance->next_maintenance_date,
+                ];
+            });
 
-        return response()->json($Maintenance) ; 
-}
+        return response()->json($Maintenance);
+    }
 
     /**
      * Store a newly created resource in storage.
@@ -42,50 +43,57 @@ class MaintenanceController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-public function store(Request $request): JsonResponse
-{
-    $validated = $request->validate([
-        'carId'             => 'required|exists:cars,id',
-        'maintenanceType'   => 'required|string',
-        'maintenanceCost'   => 'required|numeric|min:0',
-        'maintenanceDate'   => 'required|date',
-        'currentMileage'    => 'required|integer|min:0',
-        'nextDueMileage'    => 'nullable|integer|min:0|gt:currentMileage',
-    ]);
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'carId' => 'required|exists:cars,id',
+            'maintenanceType' => 'required|string',
+            'maintenanceCost' => 'required|numeric|min:0',
+            'maintenanceDate' => 'required|date',
+            'currentMileage' => 'required|integer|min:0',
+            'nextDueMileage' => 'nullable|integer|min:0|gt:currentMileage',
+        ]);
+        $car = Car::findOrFail($validated['carId']);
 
-    try {
-        $maintenance = DB::transaction(function () use ($validated) {
-            $maintenance = Maintenance::create([
-                'car_id'             => $validated['carId'],
-                'type'               => $validated['maintenanceType'],
-                'cost'               => $validated['maintenanceCost'],
-                'date'               => $validated['maintenanceDate'],
-                'mileage'            => $validated['currentMileage'],
-                'next_due_mileage'   => $validated['nextDueMileage'] ?? null,
-                'status'             => 'in_progress',
-            ]);
+        if ($car->status !== 'available') {
+            return response()->json([
+                'success' => false,
+                'message' => 'This car is not available for maintenance.',
+            ], 422);
+        }
+        try {
+            $maintenance = DB::transaction(function () use ($validated) {
+                $maintenance = Maintenance::create([
+                    'car_id' => $validated['carId'],
+                    'type' => $validated['maintenanceType'],
+                    'cost' => $validated['maintenanceCost'],
+                    'date' => $validated['maintenanceDate'],
+                    'mileage' => $validated['currentMileage'],
+                    'next_due_mileage' => $validated['nextDueMileage'] ?? null,
+                    'status' => 'in_progress',
+                ]);
 
-            $maintenance->car()->update([
-                'status' => 'maintenance',
-            ]);
+                $maintenance->car()->update([
+                    'status' => 'maintenance',
+                ]);
 
-            return $maintenance;
-        });
+                return $maintenance;
+            });
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Maintenance record created successfully.',
-            'data'    => $maintenance->load('car'),
-        ], 201);
+            return response()->json([
+                'success' => true,
+                'message' => 'Maintenance record created successfully.',
+                'data' => $maintenance->load('car'),
+            ], 201);
 
-    } catch (\Throwable $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to create maintenance record.',
-        ], 500);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create maintenance record.',
+            ], 500);
+        }
     }
-}
-    
+
 
     /**
      * Display the specified resource.
@@ -122,50 +130,50 @@ public function store(Request $request): JsonResponse
     }
 
     /**
- * Mark maintenance as completed
- */
-public function complete(Maintenance $maintenance): JsonResponse
-{
-    if ($maintenance->status === 'completed') {
-        return response()->json([
-            'success' => false,
-            'message' => 'This maintenance record is already completed.',
-        ], 422);
-    }
+     * Mark maintenance as completed
+     */
+    public function complete(Maintenance $maintenance): JsonResponse
+    {
+        if ($maintenance->status === 'completed') {
+            return response()->json([
+                'success' => false,
+                'message' => 'This maintenance record is already completed.',
+            ], 422);
+        }
 
-    try {
-        $maintenance = DB::transaction(function () use ($maintenance) {
-            $maintenance->update([
-                'status' => 'completed',
+        try {
+            $maintenance = DB::transaction(function () use ($maintenance) {
+                $maintenance->update([
+                    'status' => 'completed',
+                ]);
+
+                $hasOtherActiveMaintenance = $maintenance->car
+                    ->maintenances()
+                    ->where('id', '!=', $maintenance->id)
+                    ->whereIn('status', ['pending', 'in_progress'])
+                    ->exists();
+
+                if (!$hasOtherActiveMaintenance) {
+                    $maintenance->car->update([
+                        'status' => 'available',
+                    ]);
+                }
+
+                return $maintenance;
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Maintenance marked as completed successfully.',
+                'data' => $maintenance->fresh()->load('car'),
             ]);
 
-            $hasOtherActiveMaintenance = $maintenance->car
-                ->maintenances()
-                ->where('id', '!=', $maintenance->id)
-                ->whereIn('status', ['pending', 'in_progress'])
-                ->exists();
-
-            if (!$hasOtherActiveMaintenance) {
-                $maintenance->car->update([
-                    'status' => 'available',
-                ]);
-            }
-
-            return $maintenance;
-        });
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Maintenance marked as completed successfully.',
-            'data'    => $maintenance->fresh()->load('car'),
-        ]);
-
-    } catch (\Throwable $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to complete maintenance record.',
-            "e"=>$e
-        ], 500);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to complete maintenance record.',
+                "e" => $e
+            ], 500);
+        }
     }
-}
 }
