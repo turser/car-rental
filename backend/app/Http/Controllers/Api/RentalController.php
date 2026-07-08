@@ -216,7 +216,7 @@ class RentalController extends Controller
 
         // Add +1 to include the start date in the count
         $days = Carbon::parse($validated['startDate'])
-            ->diffInDays(Carbon::parse($validated['expectedReturnDate'])) + 1;
+            ->diffInDays(Carbon::parse($validated['expectedReturnDate'])) ;
 
         // Base price = number of days × daily price
         $basePrice = $days * $pricePerDay;
