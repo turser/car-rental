@@ -332,10 +332,143 @@ class RentalController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
-    {
-        //
+    /**
+ * Display full rental details with all relations
+ */
+public function show(Rental $rental): JsonResponse
+{
+    // ============================================================
+    // 1. Check rental belongs to the authenticated user's agency
+    // ============================================================
+    if ($rental->agency_id !== auth()->user()->agency_id) {
+        return response()->json([
+            'success' => false,
+            'message' => 'This rental does not belong to your agency.',
+        ], 403);
     }
+
+    // ============================================================
+    // 2. Load all relations
+    // ============================================================
+    $rental->load([
+        'client',
+        'car.images',        
+        'agency',
+        'services.service',
+        'payments',
+        'extensions',
+    ]);
+
+    // ============================================================
+    // 3. Calculate days and prices
+    // ============================================================
+    $days      = Carbon::parse($rental->start_date)
+                    ->diffInDays($rental->end_date) ;
+    $basePrice = $rental->price_per_day * $days;
+
+    // ============================================================
+    // 4. Get last extension end date
+    // ============================================================
+    $lastExtension  = $rental->extensions->sortByDesc('id')->first();
+    $finalEndDate   = $lastExtension
+                        ? $lastExtension->new_end_date
+                        : $rental->end_date;
+
+    // ============================================================
+    // 5. Return full rental details
+    // ============================================================
+    return response()->json([
+        'success' => true,
+        'data'    => [
+
+            // ── Rental info ──
+            'rentalId'          => $rental->id,
+            'status'            => $rental->status,
+            'startDate'         => $rental->start_date,
+            'expectedEndDate'   => $rental->end_date,
+            'finalEndDate'      => $finalEndDate,
+            'actualReturnDate'  => $rental->actual_return_date,
+            'days'              => $days,
+
+            // ── Agency info ──
+            'agency' => [
+                'id'    => $rental->agency->id,
+                'name'  => $rental->agency->name,
+                'phone' => $rental->agency->phone ?? null,
+                'email' => $rental->agency->email ?? null,
+            ],
+
+            // ── Client info ──
+            'client' => [
+                'id'                        => $rental->client->id,
+                'name'                      => $rental->client->name,
+                'phone'                     => $rental->client->phone   ?? null,
+                'email'                     => $rental->client->email   ?? null,
+                'drivingLicenseExpiration'  => $rental->client->driving_license_expiration,
+            ],
+
+            // ── Car info ──
+            'car' => [
+                'id'                 => $rental->car->id,
+                'brand'              => $rental->car->brand,
+                'model'              => $rental->car->model,
+                'registrationNumber' => $rental->car->registration_number,
+                'fuelType'           => $rental->car->fuel_type,
+                'mileage'            => $rental->car->mileage,
+                'status'             => $rental->car->status,
+
+                
+                'primaryImage' => $rental->car->images
+                                    ->where('is_primary', true)
+                                    ->first()?->image_url ?? null,
+
+                'images' => $rental->car->images->map(fn($img) => [
+                    'id'        => $img->id,
+                    'url'       => $img->image_url,
+                    'thumbnail' => str_replace('/upload/', '/upload/w_150,h_150,c_fill/', $img->image_url),
+                    'isPrimary' => $img->is_primary,
+                ]),
+            ],
+
+            // ── Price summary ──
+            'priceSummary' => [
+                'pricePerDay'     => $rental->price_per_day,
+                'basePrice'       => $basePrice,
+                'servicesTotal'   => $rental->services->sum('total_price'),
+                'totalPrice'      => $rental->total_price,
+                'paidAmount'      => $rental->paid_amount,
+                'remainingAmount' => max($rental->total_price - $rental->paid_amount, 0),
+                'isFullyPaid'     => $rental->paid_amount >= $rental->total_price,
+            ],
+
+            // ── Services ──
+            'services' => $rental->services->map(fn($s) => [
+                'id'         => $s->id,
+                'name'       => $s->service->name,
+                'priceType'  => $s->service->price_type,
+                'quantity'   => $s->quantity,
+                'unitPrice'  => $s->unit_price,
+                'totalPrice' => $s->total_price,
+            ]),
+
+            // ── Extensions history ──
+            'extensions' => $rental->extensions->map(fn($e) => [
+                'id'         => $e->id,
+                'oldEndDate' => $e->old_end_date,
+                'newEndDate' => $e->new_end_date,
+                'createdAt'  => $e->created_at,
+            ]),
+
+            // ── Payments history ──
+            'payments' => $rental->payments->map(fn($p) => [
+                'id'            => $p->id,
+                'amount'        => $p->amount,
+                'paymentMethod' => $p->payment_method,
+                'paymentDate'   => $p->payment_date,
+            ]),
+        ],
+    ]);
+}
 
     /**
      * Update the specified resource in storage.
