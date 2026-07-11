@@ -7,6 +7,7 @@ import Profil from './pages/Profil';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
+import PageTitle from './components/PageTitle';
 import voitureRoutes from './routes/voitureRoutes';
 import clientRoutes from './routes/clientRoutes';
 import assuranceRoutes from './routes/assuranceRoutes';
@@ -22,6 +23,7 @@ export default function App() {
         // Provider rend le store Redux (état global : utilisateur connecté, etc.) accessible à toute l'app.
         <Provider store={store}>
             <BrowserRouter>
+                <PageTitle />
                 <Routes>
                     {/* Page de connexion : accessible uniquement si l'utilisateur N'EST PAS déjà connecté (voir PublicRoute) */}
                     <Route

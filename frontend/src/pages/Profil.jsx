@@ -50,10 +50,9 @@ export default function Profil() {
     };
 
     const infoTiles = [
-        { label: 'Identifiant', value: `#${user.id}`,      icon: 'ti-fingerprint' },
-        { label: 'Nom complet', value: user.name,          icon: 'ti-user' },
-        { label: 'Email',       value: user.email,         icon: 'ti-mail' },
-        { label: 'Agence',      value: `#${user.agency_id}`, icon: 'ti-building' },
+        { label: 'Nom complet', value: user.name,  icon: 'ti-user' },
+        { label: 'Email',       value: user.email, icon: 'ti-mail' },
+        { label: 'Agence',      value: user.agency?.name ?? user.agency_name ?? '—', icon: 'ti-building' },
     ];
 
     return (
@@ -111,7 +110,7 @@ export default function Profil() {
                         <h2 className="text-sm font-semibold text-stone-700 mb-4 flex items-center gap-2">
                             <i className="ti ti-address-book text-emerald-500" /> Informations du compte
                         </h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             {infoTiles.map((item, index) => (
                                 <motion.div
                                     key={item.label}

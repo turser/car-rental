@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 
 const MotionNavLink = motion.create(NavLink);
@@ -35,7 +36,7 @@ const sections = [
     {
         title: 'Autre',
         links: [
-            { to: '/utilisateurs', label: 'Utilisateurs', icon: 'ti-user-cog' },
+            { to: '/utilisateurs', label: 'Utilisateurs', icon: 'ti-user-cog', roles: ['admin'] },
             { to: '/parametres',   label: 'Paramètres',   icon: 'ti-settings' },
         ],
     },
@@ -46,6 +47,8 @@ const linkCls = ({ isActive }) =>
     ${isActive ? 'bg-emerald-800 text-white' : 'text-emerald-100/60 hover:text-white hover:bg-emerald-900/60'}`;
 
 export default function Sidebar() {
+    const role = useSelector(state => state.auth.user?.role);
+
     return (
         <aside className="flex flex-col w-60 h-screen fixed inset-y-0 left-0 bg-emerald-950 text-emerald-100 overflow-hidden">
 
@@ -72,7 +75,9 @@ export default function Sidebar() {
                             </p>
                         )}
                         <div className="flex flex-col gap-0.5">
-                            {section.links.map(link => (
+                            {section.links
+                                .filter(link => !link.roles || link.roles.includes(role))
+                                .map(link => (
                                 <MotionNavLink
                                     key={link.to}
                                     to={link.to}

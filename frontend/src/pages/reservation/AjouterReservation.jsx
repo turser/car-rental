@@ -92,7 +92,7 @@ export default function AjouterReservation() {
         if (!form.startDate || !form.expectedReturnDate) return 0;
         const start = new Date(form.startDate);
         const end = new Date(form.expectedReturnDate);
-        const diff = Math.round((end - start) / 86400000) + 1;
+        const diff = Math.round((end - start) / 86400000);
         return diff > 0 ? diff : 0;
     }, [form.startDate, form.expectedReturnDate]);
 

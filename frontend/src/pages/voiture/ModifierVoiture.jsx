@@ -10,8 +10,6 @@ const FUEL_OPTIONS = [
     { value: 'hybrid',   label: 'Hybride' },
 ];
 
-const IMAGE_BASE = 'https://car-rental-production-59c6.up.railway.app/storage/';
-
 const inputCls = 'w-full bg-white border border-stone-300 text-stone-900 placeholder-stone-400 px-3 py-2 rounded-md text-sm focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition';
 
 function Field({ label, required, children }) {
@@ -62,7 +60,7 @@ export default function ModifierVoiture() {
                     fuelType: car.fuel_type || 'diesel',
                 });
                 const img = car.images?.find(i => i.is_primary) || car.images?.[0];
-                if (img) setPrimaryPreview(IMAGE_BASE + img.image_path);
+                if (img) setPrimaryPreview(img.image_path);
             })
             .catch(() => setError('Voiture introuvable.'))
             .finally(() => setLoading(false));

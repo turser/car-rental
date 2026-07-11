@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import api from '../../api/api';
 
@@ -16,8 +17,6 @@ const FUEL = {
     electric: { label: 'Électrique', icon: 'ti-bolt' },
     hybrid:   { label: 'Hybride',    icon: 'ti-leaf' },
 };
-
-const IMAGE_BASE = 'https://car-rental-production-59c6.up.railway.app/storage/';
 
 function FilterSection({ title, open, onToggle, children }) {
     return (
@@ -51,84 +50,86 @@ function FilterCheckbox({ label, checked, onChange, dot }) {
     );
 }
 
+function Chip({ icon, children }) {
+    return (
+        <span className="inline-flex items-center gap-1.5 bg-stone-50 border border-stone-100 rounded-full px-2.5 py-1 text-xs text-stone-600">
+            <i className={`ti ${icon} text-[13px] text-stone-400`} />
+            {children}
+        </span>
+    );
+}
+
 function CarListCard({ car, navigate, index }) {
     const img  = car.images?.find(i => i.is_primary) || car.images?.[0];
-    const s    = STATUS[car.status] || { label: car.status, cls: 'bg-stone-100 text-stone-600 ring-1 ring-stone-200' };
+    const s    = STATUS[car.status] || { label: car.status, cls: 'bg-stone-100 text-stone-600 ring-1 ring-stone-200', dot: 'bg-stone-400' };
     const fuel = FUEL[car.fuel_type] || { label: car.fuel_type, icon: 'ti-gas-station' };
     const year = car.purchase_date ? new Date(car.purchase_date).getFullYear() : null;
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 28, scale: 0.96 }}
+            initial={{ opacity: 0, y: 24, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 20, delay: index * 0.06 }}
-            whileHover={{ y: -6, scale: 1.015 }}
-            whileTap={{ scale: 0.985 }}
-            className="bg-white border border-stone-200 rounded-lg shadow-sm hover:shadow-lg hover:border-emerald-200 transition-shadow overflow-hidden"
+            transition={{ type: 'spring', stiffness: 260, damping: 22, delay: index * 0.05 }}
+            whileHover={{ y: -4 }}
+            className="bg-white border border-stone-200 rounded-2xl shadow-sm hover:shadow-lg hover:border-emerald-200 transition-all overflow-hidden"
         >
-            <div className="flex">
-                <div className="w-52 h-40 flex-shrink-0 bg-stone-100 border-r border-stone-200 flex items-center justify-center overflow-hidden">
+            <div className="flex flex-col sm:flex-row">
+                <div className="relative w-full sm:w-56 h-44 sm:h-auto flex-shrink-0 bg-stone-100 overflow-hidden">
                     {img ? (
                         <img
                             src={img.image_path}
                             alt={`${car.brand} ${car.model}`}
                             loading="lazy"
-                            width={208}
-                            height={160}
+                            width={224}
+                            height={176}
                             className="w-full h-full object-cover"
                         />
                     ) : (
-                        <i className="ti ti-car text-stone-300 text-5xl" />
+                        <div className="w-full h-full flex items-center justify-center">
+                            <i className="ti ti-car text-stone-300 text-5xl" />
+                        </div>
                     )}
+                    <span className={`absolute top-3 left-3 inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full font-medium shadow-sm ${s.cls}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+                        {s.label}
+                    </span>
                 </div>
 
-                <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
-                    <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 p-5 flex flex-col justify-between min-w-0">
+                    <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0">
-                            <span className={`inline-block text-[11px] px-2.5 py-0.5 rounded-full font-medium mb-2 ${s.cls}`}>
-                                {s.label}
-                            </span>
-                            <h3 className="font-bold text-stone-900 text-base truncate">{car.brand} {car.model}</h3>
-                            <p className="font-mono text-xs text-stone-400 mt-0.5">{car.registration_number}</p>
+                            <h3 className="font-bold text-stone-900 text-lg truncate">{car.brand} {car.model}</h3>
+                            <p className="inline-block font-mono text-xs text-stone-500 mt-1.5 bg-stone-50 border border-stone-100 rounded-md px-2 py-0.5">
+                                {car.registration_number}
+                            </p>
                         </div>
-                        <div className="text-right flex-shrink-0">
-                            <p className="text-2xl font-bold text-emerald-600 leading-none">
+                        <div className="text-right flex-shrink-0 bg-emerald-50 border border-emerald-100 rounded-xl px-3.5 py-2">
+                            <p className="text-xl font-bold text-emerald-700 leading-none">
                                 {parseFloat(car.daily_price).toLocaleString()}
                             </p>
-                            <p className="text-xs text-stone-400 mt-0.5">MAD / jour</p>
+                            <p className="text-[11px] text-emerald-600/70 mt-1">MAD / jour</p>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-5 text-xs text-stone-500 mt-3">
-                        <span className="flex items-center gap-1.5">
-                            <i className={`ti ${fuel.icon} text-[14px] text-stone-400`} />
-                            {fuel.label}
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                            <i className="ti ti-road text-[14px] text-stone-400" />
-                            {car.mileage?.toLocaleString()} km
-                        </span>
-                        {year && (
-                            <span className="flex items-center gap-1.5">
-                                <i className="ti ti-calendar text-[14px] text-stone-400" />
-                                {year}
-                            </span>
-                        )}
+                    <div className="flex flex-wrap items-center gap-2 mt-4">
+                        <Chip icon={fuel.icon}>{fuel.label}</Chip>
+                        <Chip icon="ti-road">{car.mileage?.toLocaleString()} km</Chip>
+                        {year && <Chip icon="ti-calendar">{year}</Chip>}
                     </div>
 
-                    <div className="flex items-center gap-2 mt-3">
+                    <div className="flex items-center gap-2 mt-4">
                         <button
                             onClick={() => navigate(`/voitures/${car.id}`)}
-                            className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium px-4 py-1.5 rounded-md transition"
+                            className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-4 py-2 rounded-lg transition shadow-sm"
                         >
-                            <i className="ti ti-eye text-[12px]" />
+                            <i className="ti ti-eye text-[13px]" />
                             Voir les détails
                         </button>
                         <button
                             onClick={() => navigate(`/voitures/${car.id}/modifier`)}
-                            className="inline-flex items-center gap-1.5 border border-stone-300 text-stone-600 hover:bg-stone-50 text-xs font-medium px-3 py-1.5 rounded-md transition"
+                            className="inline-flex items-center gap-1.5 border border-stone-200 text-stone-600 hover:bg-stone-50 hover:border-stone-300 text-xs font-semibold px-3.5 py-2 rounded-lg transition"
                         >
-                            <i className="ti ti-pencil text-[12px]" />
+                            <i className="ti ti-pencil text-[13px]" />
                             Modifier
                         </button>
                     </div>
@@ -140,53 +141,63 @@ function CarListCard({ car, navigate, index }) {
 
 function CarGridCard({ car, navigate, index }) {
     const img  = car.images?.find(i => i.is_primary) || car.images?.[0];
-    const s    = STATUS[car.status] || { label: car.status, cls: 'bg-stone-100 text-stone-600 ring-1 ring-stone-200' };
+    const s    = STATUS[car.status] || { label: car.status, cls: 'bg-stone-100 text-stone-600 ring-1 ring-stone-200', dot: 'bg-stone-400' };
     const fuel = FUEL[car.fuel_type] || { label: car.fuel_type, icon: 'ti-gas-station' };
 
     return (
         <motion.button
-            initial={{ opacity: 0, y: 28, scale: 0.94 }}
+            initial={{ opacity: 0, y: 24, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 20, delay: index * 0.06 }}
-            whileHover={{ y: -6, scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 22, delay: index * 0.05 }}
+            whileHover={{ y: -6 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => navigate(`/voitures/${car.id}`)}
-            className="text-left bg-white border border-stone-200 rounded-lg shadow-sm hover:shadow-lg hover:border-emerald-200 transition-shadow overflow-hidden group w-full"
+            className="text-left bg-white border border-stone-200 rounded-2xl shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all overflow-hidden group w-full flex flex-col"
         >
-            <div className="h-36 bg-stone-100 border-b border-stone-200 flex items-center justify-center overflow-hidden">
+            <div className="relative h-40 bg-stone-100 overflow-hidden">
                 {img ? (
                     <img
-                        src={IMAGE_BASE + img.image_path}
+                        src={img.image_path}
                         alt={`${car.brand} ${car.model}`}
                         loading="lazy"
                         width={300}
-                        height={144}
-                        className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                        height={160}
+                        className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
                     />
                 ) : (
-                    <i className="ti ti-car text-stone-300 text-4xl" />
+                    <div className="w-full h-full flex items-center justify-center">
+                        <i className="ti ti-car text-stone-300 text-4xl" />
+                    </div>
                 )}
+                <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/45 to-transparent pointer-events-none" />
+                <span className={`absolute top-3 left-3 inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full font-medium shadow-sm ${s.cls}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+                    {s.label}
+                </span>
+                <span className="absolute bottom-3 right-3 inline-flex items-baseline gap-1 bg-white/95 backdrop-blur text-stone-900 text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
+                    {parseFloat(car.daily_price).toLocaleString()}
+                    <span className="font-normal text-stone-500 text-[10px]">MAD/j</span>
+                </span>
             </div>
-            <div className="p-4">
-                <div className="flex items-start justify-between gap-2 mb-1.5">
-                    <p className="font-semibold text-stone-900 truncate">{car.brand} {car.model}</p>
-                    <span className={`flex-shrink-0 text-[11px] px-2 py-0.5 rounded-full font-medium ${s.cls}`}>{s.label}</span>
+            <div className="p-4 flex-1 flex flex-col">
+                <p className="font-bold text-stone-900 truncate">{car.brand} {car.model}</p>
+                <p className="font-mono text-xs text-stone-400 mt-0.5">{car.registration_number}</p>
+                <div className="flex items-center gap-2 mt-3 flex-wrap">
+                    <span className="inline-flex items-center gap-1 bg-stone-50 border border-stone-100 rounded-full px-2 py-0.5 text-[11px] text-stone-600">
+                        <i className={`ti ${fuel.icon} text-[12px]`} /> {fuel.label}
+                    </span>
+                    <span className="inline-flex items-center gap-1 bg-stone-50 border border-stone-100 rounded-full px-2 py-0.5 text-[11px] text-stone-600">
+                        <i className="ti ti-road text-[12px]" /> {car.mileage?.toLocaleString()} km
+                    </span>
                 </div>
-                <p className="font-mono text-xs text-stone-400 mb-3">{car.registration_number}</p>
-                <div className="flex items-center justify-between text-xs text-stone-500">
-                    <span className="flex items-center gap-1"><i className={`ti ${fuel.icon} text-[14px]`} /> {fuel.label}</span>
-                    <span className="flex items-center gap-1"><i className="ti ti-road text-[14px]" /> {car.mileage?.toLocaleString()} km</span>
-                </div>
-                <p className="mt-3 text-sm font-bold text-stone-900">
-                    {parseFloat(car.daily_price).toLocaleString()} MAD
-                    <span className="text-xs font-normal text-stone-400"> / jour</span>
-                </p>
             </div>
         </motion.button>
     );
 }
 
 export default function Voitures() {
+    const isAdmin = useSelector(state => state.auth.user?.role === 'admin');
+
     const [cars, setCars]       = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError]     = useState('');
@@ -265,16 +276,18 @@ export default function Voitures() {
                         {filtered.length} résultat{filtered.length !== 1 ? 's' : ''} sur {cars.length} véhicules
                     </p>
                 </div>
-                <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.94 }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                    onClick={() => navigate('/voitures/ajouter')}
-                    className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors shadow-sm"
-                >
-                    <i className="ti ti-plus text-[14px]" />
-                    Ajouter
-                </motion.button>
+                {isAdmin && (
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.94 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                        onClick={() => navigate('/voitures/ajouter')}
+                        className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors shadow-sm"
+                    >
+                        <i className="ti ti-plus text-[14px]" />
+                        Ajouter
+                    </motion.button>
+                )}
             </div>
 
             {/* Stats */}
@@ -342,12 +355,12 @@ export default function Voitures() {
                 {/* Car list / grid */}
                 <div className="flex-1 min-w-0">
                     {filtered.length === 0 ? (
-                        <div className="text-center py-16 text-stone-400 bg-white border border-stone-200 rounded-lg">
+                        <div className="text-center py-16 text-stone-400 bg-white border border-stone-200 rounded-2xl">
                             <i className="ti ti-car-off text-4xl mb-3 block" />
                             Aucune voiture trouvée.
                         </div>
                     ) : view === 'list' ? (
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                             {filtered.map((car, index) => (
                                 <CarListCard key={car.id} car={car} navigate={navigate} index={index} />
                             ))}
