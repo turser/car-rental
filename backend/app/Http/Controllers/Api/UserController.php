@@ -100,7 +100,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|email|unique:users,email,' . $user->id,
-            'role' => 'sometimes|in:admin,agent',
+            'role' => 'sometimes|in:admin,employee',
         ]);
 
         $user->update($validated);

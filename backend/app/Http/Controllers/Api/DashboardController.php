@@ -77,7 +77,7 @@ class DashboardController extends Controller
     }
     public function index(Request $request): JsonResponse
     {
-        
+
 
         $agencyId = auth()->user()->agency_id;
         $period = $request->input('period', 'monthly');
@@ -270,10 +270,136 @@ class DashboardController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
-    {
-        //
-    }
+    /**
+     * Get all available cars for a specific period
+     */
+    /**
+ * Get all available cars for a specific period with filters
+ */
+public function availableCars(Request $request): JsonResponse
+{
+    $validated = $request->validate([
+        'startDate'  => 'required|date',
+        'endDate'    => 'required|date|after:startDate',
+
+        // ✅ Filters
+        'brand'      => 'nullable|string',
+        'fuelType'   => 'nullable|in:essence,diesel,electric,hybrid',
+        'minPrice'   => 'nullable|numeric|min:0',
+        'maxPrice'   => 'nullable|numeric|min:0',
+        'maxMileage' => 'nullable|integer|min:0',
+    ]);
+
+    $agencyId  = auth()->user()->agency_id;
+    $startDate = $validated['startDate'];
+    $endDate   = $validated['endDate'];
+
+    $cars = Car::where('agency_id', $agencyId)
+        ->where('status', 'available')
+
+        // ============================================================
+        // ✅ Filters
+        // ============================================================
+        ->when($request->brand, fn($q) =>
+            $q->where('brand', 'like', '%' . $request->brand . '%')
+        )
+        ->when($request->fuelType, fn($q) =>
+            $q->where('fuel_type', $request->fuelType)
+        )
+        ->when($request->minPrice, fn($q) =>
+            $q->where('daily_price', '>=', $request->minPrice)
+        )
+        ->when($request->maxPrice, fn($q) =>
+            $q->where('daily_price', '<=', $request->maxPrice)
+        )
+        ->when($request->maxMileage, fn($q) =>
+            $q->where('mileage', '<=', $request->maxMileage)
+        )
+
+        // ============================================================
+        // Exclude cars with overlapping active rentals
+        // ============================================================
+        ->whereDoesntHave('rentals', function ($q) use ($startDate, $endDate) {
+            $q->where('status', 'active')
+              ->where(function ($query) use ($startDate, $endDate) {
+                  $query->whereBetween('start_date', [$startDate, $endDate])
+                        ->orWhereBetween('end_date', [$startDate, $endDate])
+                        ->orWhere(function ($q2) use ($startDate, $endDate) {
+                            $q2->where('start_date', '<=', $startDate)
+                               ->where('end_date', '>=', $endDate);
+                        });
+              });
+        })
+
+        ->with([
+            'insurances' => fn($q) => $q->latest('end_date')->limit(1),
+            'taxes'      => fn($q) => $q->latest('due_date')->limit(1),
+            'images'     => fn($q) => $q->where('is_primary', true),
+        ])
+        ->get()
+        ->map(function ($car) use ($startDate, $endDate) {
+            $insurance = $car->insurances->first();
+            $tax       = $car->taxes->first();
+            $days      = Carbon::parse($startDate)->diffInDays($endDate);
+
+            return [
+                'id'                 => $car->id,
+                'brand'              => $car->brand,
+                'model'              => $car->model,
+                'registrationNumber' => $car->registration_number,
+                'dailyPrice'         => $car->daily_price,
+                'estimatedTotal'     => $car->daily_price * $days, // ✅ السعر الإجمالي المتوقع
+                'fuelType'           => $car->fuel_type,
+                'mileage'            => $car->mileage,
+                'status'             => $car->status,
+                'image'              => $car->images->first()?->image_url ?? null,
+
+                'insurance' => $insurance ? [
+                    'endDate' => $insurance->end_date,
+                    'isValid' => $insurance->end_date >= today(),
+                ] : null,
+
+                'tax' => $tax ? [
+                    'year'    => $tax->year,
+                    'isValid' => $tax->year >= now()->year && $tax->paid,
+                ] : null,
+            ];
+        });
+
+    // ============================================================
+    // ✅ Get available brands for filter dropdown
+    // ============================================================
+    $availableBrands = Car::where('agency_id', $agencyId)
+        ->where('status', 'available')
+        ->distinct()
+        ->pluck('brand');
+
+    // ============================================================
+    // ✅ Get price range for filter slider
+    // ============================================================
+    $priceRange = Car::where('agency_id', $agencyId)
+        ->where('status', 'available')
+        ->selectRaw('MIN(daily_price) as min, MAX(daily_price) as max')
+        ->first();
+
+    return response()->json([
+        'success' => true,
+        'period'  => [
+            'startDate' => $startDate,
+            'endDate'   => $endDate,
+            'days'      => Carbon::parse($startDate)->diffInDays($endDate),
+        ],
+        'filters' => [
+            'availableBrands' => $availableBrands,  // ✅ للـ dropdown
+            'priceRange'      => [                   // ✅ للـ slider
+                'min' => $priceRange->min,
+                'max' => $priceRange->max,
+            ],
+        ],
+        'totalCars' => $cars->count(),
+        'data'      => $cars,
+    ]);
+}
 
     /**
      * Display the specified resource.

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CarController;
+use App\Http\Controllers\Api\CarSaleController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\InvoiceController;
@@ -48,10 +49,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::apiResource('users', UserController::class);
     Route::patch('users/{user}/reset-password', [UserController::class,'resetPassword']);
-    Route::get('/',[DashboardController::class,'index']);
+    Route::get('/dashboard',[DashboardController::class,'index']);
+    Route::get('/available', [DashboardController::class, 'availableCars']);
 
 
     Route::apiResource('cars', CarController::class);
+
+    Route::apiResource('carsale', CarSaleController::class);
 
     Route::apiResource('clients', ClientController::class);
 
@@ -67,11 +71,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::apiResource('rentals', RentalController::class);
 
-    Route::post('rental/{rental}/exension',[RentalExtensionController::class,'store']);
+    Route::post('rental/{rental}/extension',[RentalExtensionController::class,'store']);
     
     Route::post('/rentals/{rental}/payments', [RentalController::class, 'addPayment']);
     Route::patch('/rentals/{rental}/cancel', [RentalController::class, 'cancel']);
     Route::get('/rentals/{rental}/invoice', [InvoiceController::class, 'generate']);
+    Route::post('/rentals/{rental}/return', [RentalController::class, 'returnCar']);
+
 
 
 

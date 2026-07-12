@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\RentalService;
 use App\Models\Service;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -101,8 +102,34 @@ class ServiceController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
-    {
-        //
+   /**
+ * Delete a service — only if not used in any rental
+ */
+public function destroy(Service $service): JsonResponse
+{
+    // ============================================================
+    // 1. Check if service is used in any rental
+    // ============================================================
+    $isUsed = RentalService::where('service_id', $service->id)->exists();
+
+    if ($isUsed) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Cannot delete this service because it is used in one or more rentals.',
+            'data'    => [
+                'rentalsCount' => RentalService::where('service_id', $service->id)->count(),
+            ],
+        ], 422);
     }
+
+    // ============================================================
+    // 2. Delete service
+    // ============================================================
+    $service->delete();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Service deleted successfully.',
+    ]);
+}
 }

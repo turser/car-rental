@@ -87,11 +87,7 @@ class ClientController extends Controller
 
     public function update(Request $request, Client $client)
     {
-       
-
-      
-
-        $validated = $request->validate([
+       $validated = $request->validate([
             'nomComplet' => 'sometimes|required',
             'cin' => 'sometimes|required|unique:clients,cin,' . $client->id,
             'numeroPermis' => 'sometimes|required|unique:clients,driving_license,' . $client->id,
