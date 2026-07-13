@@ -8,7 +8,7 @@ const STATUS = {
     available:   { label: 'Disponible',   cls: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200', dot: 'bg-emerald-500' },
     rented:      { label: 'Louée',        cls: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200',          dot: 'bg-blue-500' },
     maintenance: { label: 'Maintenance',  cls: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',       dot: 'bg-amber-500' },
-    unavailable: { label: 'Indisponible', cls: 'bg-red-50 text-red-600 ring-1 ring-red-200',             dot: 'bg-red-500' },
+    unavailable: { label: 'Indisponible', cls: 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200',             dot: 'bg-emerald-500' },
 };
 
 const FUEL = {
@@ -212,7 +212,7 @@ export default function Voitures() {
 
     useEffect(() => {
         api.get('/cars')
-            .then(res => setCars(res.data))
+            .then(res => setCars(Array.isArray(res.data) ? res.data : res.data?.data ?? []))
             .catch(() => setError('Erreur lors du chargement des voitures.'))
             .finally(() => setLoading(false));
     }, []);
@@ -276,18 +276,30 @@ export default function Voitures() {
                         {filtered.length} résultat{filtered.length !== 1 ? 's' : ''} sur {cars.length} véhicules
                     </p>
                 </div>
-                {isAdmin && (
+                <div className="flex items-center gap-2">
                     <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.94 }}
                         transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                        onClick={() => navigate('/voitures/ajouter')}
-                        className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors shadow-sm"
+                        onClick={() => navigate('/voitures/vendues')}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md border border-stone-300 text-stone-600 text-sm font-medium hover:bg-stone-50 transition-colors"
                     >
-                        <i className="ti ti-plus text-[14px]" />
-                        Ajouter
+                        <i className="ti ti-cash-banknote text-[14px]" />
+                        Voitures vendues
                     </motion.button>
-                )}
+                    {isAdmin && (
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.94 }}
+                            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                            onClick={() => navigate('/voitures/ajouter')}
+                            className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors shadow-sm"
+                        >
+                            <i className="ti ti-plus text-[14px]" />
+                            Ajouter
+                        </motion.button>
+                    )}
+                </div>
             </div>
 
             {/* Stats */}

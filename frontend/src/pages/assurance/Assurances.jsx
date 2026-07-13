@@ -19,7 +19,8 @@ export default function Assurances() {
         Promise.all([api.get('/insurances'), api.get('/cars')])
             .then(([insRes, carsRes]) => {
                 setInsurances(insRes.data);
-                setCarsById(Object.fromEntries(carsRes.data.map(c => [c.id, c])));
+                const carsList = Array.isArray(carsRes.data) ? carsRes.data : carsRes.data?.data ?? [];
+                setCarsById(Object.fromEntries(carsList.map(c => [c.id, c])));
             })
             .catch(() => setError('Erreur lors du chargement des assurances.'))
             .finally(() => setLoading(false));

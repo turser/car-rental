@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../api/api';
 import { translateError } from '../../utils/translateError';
@@ -8,7 +9,7 @@ const STATUS = {
     available:   { label: 'Disponible',   cls: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' },
     rented:      { label: 'Louée',        cls: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200' },
     maintenance: { label: 'Maintenance',  cls: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200' },
-    unavailable: { label: 'Indisponible', cls: 'bg-red-50 text-red-600 ring-1 ring-red-200' },
+    unavailable: { label: 'Indisponible', cls: 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200' },
 };
 
 const FUEL = { diesel: 'Diesel', petrol: 'Essence', electric: 'Électrique', hybrid: 'Hybride' };
@@ -16,7 +17,7 @@ const FUEL = { diesel: 'Diesel', petrol: 'Essence', electric: 'Électrique', hyb
 const RENTAL_STATUS = {
     completed: { label: 'Terminée',   cls: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' },
     active:    { label: 'En cours',   cls: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200' },
-    cancelled: { label: 'Annulée',    cls: 'bg-red-50 text-red-600 ring-1 ring-red-200' },
+    cancelled: { label: 'Annulée',    cls: 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200' },
     pending:   { label: 'En attente', cls: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200' },
 };
 
@@ -212,16 +213,33 @@ const MODALS = {
             { name: 'nextDueMileage',  label: 'Prochain Km',     type: 'number', required: true },
         ],
     },
+    sale: {
+        title: 'Vendre la voiture',
+        icon: 'ti-cash-banknote',
+        endpoint: '/carsale',
+        confirm: true,
+        fields: [
+            { name: 'saleDate',     label: 'Date de vente',          type: 'date',   required: true },
+            { name: 'salePrice',    label: 'Prix de vente (MAD)',    type: 'number', required: true },
+            { name: 'buyerName',    label: "Nom de l'acheteur",      type: 'text',   required: true, full: true },
+            { name: 'buyerContact', label: "Contact de l'acheteur",  type: 'text',   required: true, full: true },
+        ],
+    },
 };
 
 function AddRecordModal({ config, submitting, error, onClose, onSubmit }) {
     const [values, setValues] = useState(() =>
         Object.fromEntries(config.fields.map(f => [f.name, f.type === 'checkbox' ? false : '']))
     );
+    const [confirming, setConfirming] = useState(false);
     const set = (name, val) => setValues(v => ({ ...v, [name]: val }));
 
     const handleSubmit = e => {
         e.preventDefault();
+        if (config.confirm && !confirming) {
+            setConfirming(true);
+            return;
+        }
         onSubmit(values);
     };
 
@@ -246,45 +264,68 @@ function AddRecordModal({ config, submitting, error, onClose, onSubmit }) {
                             <i className="ti ti-alert-circle flex-shrink-0" /> {error}
                         </div>
                     )}
-                    <div className="grid grid-cols-2 gap-4">
-                        {config.fields.map(field => (
-                            <div key={field.name} className={field.full ? 'col-span-2' : ''}>
-                                {field.type === 'checkbox' ? (
-                                    <label className="flex items-center gap-2.5 cursor-pointer mt-5">
-                                        <input
-                                            type="checkbox"
-                                            checked={values[field.name]}
-                                            onChange={e => set(field.name, e.target.checked)}
-                                            className="w-4 h-4 accent-emerald-600 rounded-sm cursor-pointer"
-                                        />
-                                        <span className="text-sm text-stone-600">{field.label}</span>
-                                    </label>
-                                ) : (
-                                    <div>
-                                        <label className="block text-xs font-medium text-stone-600 mb-1.5">
-                                            {field.label}{field.required && <span className="text-red-500 ml-0.5">*</span>}
-                                        </label>
-                                        <input
-                                            type={field.type}
-                                            step={field.type === 'number' ? '0.01' : undefined}
-                                            required={field.required}
-                                            value={values[field.name]}
-                                            onChange={e => set(field.name, e.target.value)}
-                                            className={inputCls}
-                                        />
-                                    </div>
-                                )}
+
+                    {confirming ? (
+                        <div>
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                                    <i className="ti ti-alert-triangle text-emerald-600 text-[18px]" />
+                                </div>
+                                <p className="text-sm text-stone-600">Cette action est irréversible. Vérifiez les informations avant de confirmer.</p>
                             </div>
-                        ))}
-                    </div>
+                            <div className="bg-stone-50 border border-stone-100 rounded-lg divide-y divide-stone-100">
+                                {config.fields.map(field => (
+                                    <div key={field.name} className="flex items-center justify-between px-3.5 py-2 text-sm">
+                                        <span className="text-stone-500">{field.label}</span>
+                                        <span className="font-medium text-stone-900">
+                                            {field.type === 'checkbox' ? (values[field.name] ? 'Oui' : 'Non') : (values[field.name] || '—')}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-2 gap-4">
+                            {config.fields.map(field => (
+                                <div key={field.name} className={field.full ? 'col-span-2' : ''}>
+                                    {field.type === 'checkbox' ? (
+                                        <label className="flex items-center gap-2.5 cursor-pointer mt-5">
+                                            <input
+                                                type="checkbox"
+                                                checked={values[field.name]}
+                                                onChange={e => set(field.name, e.target.checked)}
+                                                className="w-4 h-4 accent-emerald-600 rounded-sm cursor-pointer"
+                                            />
+                                            <span className="text-sm text-stone-600">{field.label}</span>
+                                        </label>
+                                    ) : (
+                                        <div>
+                                            <label className="block text-xs font-medium text-stone-600 mb-1.5">
+                                                {field.label}{field.required && <span className="text-emerald-500 ml-0.5">*</span>}
+                                            </label>
+                                            <input
+                                                type={field.type}
+                                                step={field.type === 'number' ? '0.01' : undefined}
+                                                required={field.required}
+                                                value={values[field.name]}
+                                                onChange={e => set(field.name, e.target.value)}
+                                                className={inputCls}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
                     <div className="flex items-center justify-end gap-2 pt-2">
                         <button
                             type="button"
-                            onClick={onClose}
+                            onClick={confirming ? () => setConfirming(false) : onClose}
                             disabled={submitting}
                             className="px-4 py-2 rounded-md border border-stone-300 text-stone-600 text-sm font-medium hover:bg-stone-50 transition disabled:opacity-60"
                         >
-                            Annuler
+                            {confirming ? 'Retour' : 'Annuler'}
                         </button>
                         <button
                             type="submit"
@@ -296,9 +337,9 @@ function AddRecordModal({ config, submitting, error, onClose, onSubmit }) {
                                     <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                                         <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
                                     </svg>
-                                    Ajout…
+                                    {confirming ? 'Envoi…' : 'Ajout…'}
                                 </>
-                            ) : 'Ajouter'}
+                            ) : confirming ? 'Confirmer la vente' : config.confirm ? 'Continuer' : 'Ajouter'}
                         </button>
                     </div>
                 </form>
@@ -331,12 +372,10 @@ function DataTable({ headers, rows, empty, icon }) {
 export default function VoitureDetail() {
     const { id }   = useParams();
     const navigate = useNavigate();
+    const isAdmin  = useSelector(state => state.auth.user?.role === 'admin');
     const [car, setCar]               = useState(null);
     const [loading, setLoading]       = useState(true);
     const [error, setError]           = useState('');
-    const [showConfirm, setShowConfirm] = useState(false);
-    const [deleting, setDeleting]       = useState(false);
-    const [deleteError, setDeleteError] = useState('');
 
     const [modal, setModal]                     = useState(null);
     const [modalSubmitting, setModalSubmitting] = useState(false);
@@ -358,6 +397,10 @@ export default function VoitureDetail() {
         setModalError('');
         try {
             await api.post(MODALS[modal].endpoint, { carId: Number(id), ...values });
+            if (modal === 'sale') {
+                navigate('/voitures/vendues');
+                return;
+            }
             await fetchCar();
             setModal(null);
         } catch (err) {
@@ -369,18 +412,6 @@ export default function VoitureDetail() {
             );
         } finally {
             setModalSubmitting(false);
-        }
-    };
-
-    const handleDelete = async () => {
-        setDeleting(true);
-        setDeleteError('');
-        try {
-            await api.delete(`/cars/${id}`);
-            navigate('/voitures');
-        } catch (err) {
-            setDeleteError(translateError(err.response?.data?.message) || 'Erreur lors de la suppression.');
-            setDeleting(false);
         }
     };
 
@@ -432,17 +463,19 @@ export default function VoitureDetail() {
                     </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
+                    {isAdmin && (
+                        <button
+                            onClick={() => setModal('sale')}
+                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md border border-stone-300 text-stone-600 text-sm font-medium hover:bg-stone-50 transition"
+                        >
+                            <i className="ti ti-cash-banknote text-[14px]" /> Vendre
+                        </button>
+                    )}
                     <button
                         onClick={() => navigate(`/voitures/${id}/modifier`)}
                         className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md border border-stone-300 text-stone-600 text-sm font-medium hover:bg-stone-50 transition"
                     >
                         <i className="ti ti-pencil text-[14px]" /> Modifier
-                    </button>
-                    <button
-                        onClick={() => setShowConfirm(true)}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 transition"
-                    >
-                        <i className="ti ti-trash text-[14px]" /> Supprimer
                     </button>
                 </div>
             </div>
@@ -506,7 +539,7 @@ export default function VoitureDetail() {
                             <td className="py-3 px-6 text-stone-600">{fmtPrice(tax.amount)}</td>
                             <td className="py-3 px-6 text-stone-600">{fmtDate(tax.due_date)}</td>
                             <td className="py-3 px-6">
-                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${tax.paid ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' : 'bg-red-50 text-red-600 ring-1 ring-red-200'}`}>
+                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${tax.paid ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' : 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200'}`}>
                                     {tax.paid ? 'Payée' : 'Non payée'}
                                 </span>
                             </td>
@@ -556,51 +589,6 @@ export default function VoitureDetail() {
                     })}
                 />
             </Section>
-
-            {/* Confirmation suppression */}
-            {showConfirm && (
-                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
-                    <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-5">
-                        <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0">
-                                <i className="ti ti-alert-triangle text-red-600 text-[18px]" />
-                            </div>
-                            <h3 className="text-base font-semibold text-stone-900">Supprimer cette voiture ?</h3>
-                        </div>
-                        <p className="text-sm text-stone-500 mb-4">
-                            Cette action est irréversible. {car.brand} {car.model} ({car.registration_number}) sera définitivement supprimée.
-                        </p>
-                        {deleteError && (
-                            <div className="flex items-center gap-2 bg-red-50 text-red-600 px-3 py-2 rounded-md border border-red-200 text-xs mb-4">
-                                <i className="ti ti-alert-circle" /> {deleteError}
-                            </div>
-                        )}
-                        <div className="flex items-center justify-end gap-2">
-                            <button
-                                onClick={() => setShowConfirm(false)}
-                                disabled={deleting}
-                                className="px-4 py-2 rounded-md border border-stone-300 text-stone-600 text-sm font-medium hover:bg-stone-50 transition disabled:opacity-60"
-                            >
-                                Annuler
-                            </button>
-                            <button
-                                onClick={handleDelete}
-                                disabled={deleting}
-                                className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-red-600 hover:bg-red-500 disabled:opacity-60 text-white text-sm font-medium transition"
-                            >
-                                {deleting ? (
-                                    <>
-                                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                                            <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
-                                        </svg>
-                                        Suppression…
-                                    </>
-                                ) : 'Supprimer'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* Ajout assurance / impôt / maintenance */}
             {modal && (

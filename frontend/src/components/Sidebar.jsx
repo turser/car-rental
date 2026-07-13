@@ -1,6 +1,8 @@
-import { NavLink } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
+import api from '../api/api';
+import { useTheme } from '../context/ThemeContext';
 
 const MotionNavLink = motion.create(NavLink);
 
@@ -37,20 +39,34 @@ const sections = [
         title: 'Autre',
         links: [
             { to: '/utilisateurs', label: 'Utilisateurs', icon: 'ti-user-cog', roles: ['admin'] },
-            { to: '/parametres',   label: 'Paramètres',   icon: 'ti-settings' },
+            { to: '/profil',       label: 'Profil',       icon: 'ti-user' },
         ],
     },
 ];
 
 const linkCls = ({ isActive }) =>
     `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors
-    ${isActive ? 'bg-emerald-800 text-white' : 'text-emerald-100/60 hover:text-white hover:bg-emerald-900/60'}`;
+    ${isActive ? 'bg-emerald-600 text-white' : 'text-white/60 hover:text-white hover:bg-white/10'}`;
 
 export default function Sidebar() {
     const role = useSelector(state => state.auth.user?.role);
+    const user = useSelector(state => state.auth.user);
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const { theme, toggleTheme } = useTheme();
+    const isDark = theme === 'dark';
+
+    const handleLogout = async () => {
+        try { await api.post('/logout'); } catch (_) {}
+        dispatch({ type: 'auth/logout' });
+        navigate('/login');
+    };
+
+    const initials = user?.name
+        ?.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() ?? '?';
 
     return (
-        <aside className="flex flex-col w-60 h-screen fixed inset-y-0 left-0 bg-emerald-950 text-emerald-100 overflow-hidden">
+        <aside className="flex flex-col w-60 h-screen fixed inset-y-0 left-0 bg-black text-white overflow-hidden">
 
             {/* Logo */}
             <div className="flex items-center gap-2.5 px-4 py-5 flex-shrink-0">
@@ -66,11 +82,11 @@ export default function Sidebar() {
             </div>
 
             {/* Nav */}
-            <nav className="flex-1 min-h-0 overflow-y-auto px-3 pb-3 flex flex-col">
+            <nav className="flex-1 px-3 pb-3 flex flex-col">
                 {sections.map((section, i) => (
                     <div key={i}>
                         {section.title && (
-                            <p className="px-3 pt-4 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-400/60">
+                            <p className="px-3 pt-4 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/40">
                                 {section.title}
                             </p>
                         )}
@@ -96,6 +112,38 @@ export default function Sidebar() {
                 ))}
             </nav>
 
+            {/* Footer : utilisateur, thème, déconnexion */}
+            <div className="flex-shrink-0 border-t border-white/10 px-3 py-3 space-y-2">
+                {user && (
+                    <button
+                        onClick={() => navigate('/profil')}
+                        className="w-full flex items-center gap-2.5 px-2 py-2 rounded-md text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+                    >
+                        <div className="w-7 h-7 rounded-full bg-emerald-900 text-emerald-300 flex items-center justify-center text-[11px] font-bold flex-shrink-0">
+                            {initials}
+                        </div>
+                        <span className="text-sm font-medium truncate">{user.name}</span>
+                    </button>
+                )}
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={toggleTheme}
+                        title={isDark ? 'Passer au thème clair' : 'Passer au thème sombre'}
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-md text-sm font-medium text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+                    >
+                        <i className={`ti ${isDark ? 'ti-sun' : 'ti-moon'} text-[15px]`} />
+                        {isDark ? 'Clair' : 'Sombre'}
+                    </button>
+                    <button
+                        onClick={handleLogout}
+                        title="Déconnexion"
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-md text-sm font-medium text-white/60 hover:text-emerald-400 hover:bg-white/10 transition-colors"
+                    >
+                        <i className="ti ti-logout text-[15px]" />
+                        Sortir
+                    </button>
+                </div>
+            </div>
         </aside>
     );
 }

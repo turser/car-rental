@@ -107,7 +107,7 @@ export default function Login() {
 
                     <form onSubmit={handleLogin} className="w-full space-y-3.5">
                         {error && (
-                            <div className="flex items-center gap-2 justify-center bg-red-500/10 text-red-400 text-sm px-3.5 py-2.5 rounded-lg border border-red-500/20">
+                            <div className="flex items-center gap-2 justify-center bg-emerald-500/10 text-emerald-400 text-sm px-3.5 py-2.5 rounded-lg border border-emerald-500/20">
                                 <i className="ti ti-alert-circle text-[15px] flex-shrink-0" />
                                 {error}
                             </div>
@@ -145,7 +145,7 @@ export default function Login() {
             {/* Vagues décoratives */}
             <div className="absolute bottom-0 left-0 w-full h-40 sm:h-48 pointer-events-none">
                 <svg className="absolute bottom-0 w-full h-full" viewBox="0 0 1440 220" preserveAspectRatio="none">
-                    <path fill="#0d2b1d" d="M0,90 C220,150 420,30 720,70 C1020,110 1240,40 1440,90 L1440,220 L0,220 Z" />
+                    <path fill="#01201a" d="M0,90 C220,150 420,30 720,70 C1020,110 1240,40 1440,90 L1440,220 L0,220 Z" />
                 </svg>
                 <svg className="absolute bottom-0 w-full h-full" viewBox="0 0 1440 220" preserveAspectRatio="none">
                     <path fill="#fafaf9" d="M0,140 C260,190 480,110 720,140 C980,172 1200,110 1440,150 L1440,220 L0,220 Z" />

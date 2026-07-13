@@ -1,5 +1,4 @@
 import Sidebar from './Sidebar';
-import Navbar from './Navbar';
 import { Outlet, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -12,9 +11,6 @@ export default function Layout() {
                 <Sidebar />
             </div>
             <div className="flex-1 ml-60 flex flex-col min-h-screen print:ml-0 print:min-h-0">
-                <div className="print:hidden">
-                    <Navbar />
-                </div>
                 <main className="flex-1 p-8 overflow-y-auto">
                     <AnimatePresence mode="wait">
                         <motion.div

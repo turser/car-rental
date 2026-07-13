@@ -19,7 +19,8 @@ export default function Maintenances() {
         Promise.all([api.get('/maintenance'), api.get('/cars')])
             .then(([maintRes, carsRes]) => {
                 setMaintenances(maintRes.data);
-                setCarsById(Object.fromEntries(carsRes.data.map(c => [c.id, c])));
+                const carsList = Array.isArray(carsRes.data) ? carsRes.data : carsRes.data?.data ?? [];
+                setCarsById(Object.fromEntries(carsList.map(c => [c.id, c])));
             })
             .catch(() => setError('Erreur lors du chargement des maintenances.'))
             .finally(() => setLoading(false));

@@ -13,10 +13,12 @@ const TITLES = [
     { test: /^\/reservations$/,                          title: 'Réservations' },
 
     { test: /^\/clients\/ajouter$/,                      title: 'Ajouter un client' },
+    { test: /^\/clients\/[^/]+\/modifier$/,              title: 'Modifier le client' },
     { test: /^\/clients\/[^/]+$/,                        title: 'Détails client' },
     { test: /^\/clients$/,                               title: 'Clients' },
 
     { test: /^\/voitures\/ajouter$/,                     title: 'Ajouter une voiture' },
+    { test: /^\/voitures\/vendues$/,                     title: 'Voitures vendues' },
     { test: /^\/voitures\/[^/]+\/modifier$/,             title: 'Modifier la voiture' },
     { test: /^\/voitures\/[^/]+$/,                       title: 'Détails véhicule' },
     { test: /^\/voitures$/,                              title: 'Voitures' },

@@ -6,7 +6,7 @@ import api from '../../api/api';
 const RENTAL_STATUS = {
     completed: { label: 'Terminée',   cls: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' },
     active:    { label: 'En cours',   cls: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200' },
-    cancelled: { label: 'Annulée',    cls: 'bg-red-50 text-red-600 ring-1 ring-red-200' },
+    cancelled: { label: 'Annulée',    cls: 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200' },
     pending:   { label: 'En attente', cls: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200' },
 };
 
@@ -16,7 +16,7 @@ const fmtPrice = p => p ? parseFloat(p).toLocaleString() + ' MAD' : '—';
 function licenseStatus(expiration) {
     if (!expiration) return { label: 'Inconnu', cls: 'bg-stone-100 text-stone-600 border border-stone-200' };
     const days = Math.floor((new Date(expiration) - new Date()) / 86400000);
-    if (days < 0)  return { label: 'Expiré',        cls: 'bg-red-50 text-red-600 border border-red-100' };
+    if (days < 0)  return { label: 'Expiré',        cls: 'bg-emerald-50 text-emerald-600 border border-emerald-100' };
     if (days <= 30) return { label: 'Expire bientôt', cls: 'bg-amber-50 text-amber-700 border border-amber-100' };
     return { label: 'Valide', cls: 'bg-emerald-50 text-emerald-700 border border-emerald-100' };
 }
@@ -76,17 +76,25 @@ export default function ClientDetail() {
         <div className="max-w-6xl">
 
             {/* Header */}
-            <div className="flex items-center gap-3 mb-6">
-                <button
-                    onClick={() => navigate('/clients')}
-                    className="w-8 h-8 rounded-md border border-stone-200 bg-white flex items-center justify-center text-stone-500 hover:bg-stone-50 transition flex-shrink-0"
-                >
-                    <i className="ti ti-arrow-left text-[15px]" />
-                </button>
-                <div>
-                    <h1 className="text-xl font-semibold text-stone-900">{client.full_name}</h1>
-                    <p className="text-sm text-stone-500 mt-0.5">Fiche client et historique des locations</p>
+            <div className="flex items-center justify-between gap-3 mb-6">
+                <div className="flex items-center gap-3 min-w-0">
+                    <button
+                        onClick={() => navigate('/clients')}
+                        className="w-8 h-8 rounded-md border border-stone-200 bg-white flex items-center justify-center text-stone-500 hover:bg-stone-50 transition flex-shrink-0"
+                    >
+                        <i className="ti ti-arrow-left text-[15px]" />
+                    </button>
+                    <div className="min-w-0">
+                        <h1 className="text-xl font-semibold text-stone-900 truncate">{client.full_name}</h1>
+                        <p className="text-sm text-stone-500 mt-0.5">Fiche client et historique des locations</p>
+                    </div>
                 </div>
+                <button
+                    onClick={() => navigate(`/clients/${id}/modifier`)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md border border-stone-300 text-stone-600 text-sm font-medium hover:bg-stone-50 transition flex-shrink-0"
+                >
+                    <i className="ti ti-pencil text-[14px]" /> Modifier
+                </button>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">

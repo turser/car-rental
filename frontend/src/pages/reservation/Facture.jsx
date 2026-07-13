@@ -213,7 +213,7 @@ export default function Facture() {
                         </div>
                         <div className="flex justify-between font-semibold pt-2 border-t border-stone-200">
                             <span>Reste à payer</span>
-                            <span className={summary?.remainingAmount > 0 ? 'text-red-600' : 'text-stone-900'}>
+                            <span className={summary?.remainingAmount > 0 ? 'text-emerald-600' : 'text-stone-900'}>
                                 {fmtPrice(summary?.remainingAmount)}
                             </span>
                         </div>

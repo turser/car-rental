@@ -157,7 +157,7 @@ export default function Profil() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-medium text-stone-600 mb-1.5">
-                                        Nouveau mot de passe<span className="text-red-500 ml-0.5">*</span>
+                                        Nouveau mot de passe<span className="text-emerald-500 ml-0.5">*</span>
                                     </label>
                                     <input
                                         type="password"
@@ -171,7 +171,7 @@ export default function Profil() {
                                 </div>
                                 <div>
                                     <label className="block text-xs font-medium text-stone-600 mb-1.5">
-                                        Confirmer le mot de passe<span className="text-red-500 ml-0.5">*</span>
+                                        Confirmer le mot de passe<span className="text-emerald-500 ml-0.5">*</span>
                                     </label>
                                     <input
                                         type="password"

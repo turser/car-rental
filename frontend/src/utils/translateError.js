@@ -16,6 +16,7 @@ const EXACT_MATCHES = {
     'User created successfully.': 'Utilisateur créé avec succès.',
     'User updated successfully.': 'Utilisateur mis à jour avec succès.',
     'Password reset successfully.': 'Mot de passe réinitialisé avec succès.',
+    'Cannot delete this service because it is used in one or more rentals.': 'Impossible de supprimer ce service car il est utilisé dans une ou plusieurs réservations.',
 };
 
 // Couverture générique des messages de validation Laravel par défaut (resources/lang/en/validation.php).

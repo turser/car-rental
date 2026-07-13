@@ -15,7 +15,7 @@ function Field({ label, required, children }) {
     return (
         <div>
             <label className="block text-xs font-medium text-stone-600 mb-1.5">
-                {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+                {label}{required && <span className="text-emerald-500 ml-0.5">*</span>}
             </label>
             {children}
         </div>

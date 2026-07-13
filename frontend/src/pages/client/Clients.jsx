@@ -99,7 +99,7 @@ export default function Clients() {
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="border-b border-stone-200 bg-stone-50">
-                                {['Client', 'CIN', 'Permis', 'Expiration permis', 'Téléphone', 'Locations'].map(h => (
+                                {['Client', 'CIN', 'Permis', 'Expiration permis', 'Téléphone', ''].map(h => (
                                     <th key={h} className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wider">{h}</th>
                                 ))}
                             </tr>
@@ -132,7 +132,14 @@ export default function Clients() {
                                         <td className="px-5 py-3.5 font-mono text-xs text-stone-500">{client.driving_license}</td>
                                         <td className="px-5 py-3.5 text-stone-600">{fmtDate(client.driving_license_expiration)}</td>
                                         <td className="px-5 py-3.5 text-stone-600">{client.phone}</td>
-                                        <td className="px-5 py-3.5 text-stone-600">{client.rentals?.length ?? 0}</td>
+                                        <td className="px-5 py-3.5 text-right">
+                                            <button
+                                                onClick={e => { e.stopPropagation(); navigate(`/clients/${client.id}/modifier`); }}
+                                                className="w-7 h-7 inline-flex items-center justify-center rounded-md text-stone-400 hover:text-emerald-600 hover:bg-emerald-50 transition"
+                                            >
+                                                <i className="ti ti-pencil text-[14px]" />
+                                            </button>
+                                        </td>
                                     </motion.tr>
                                 );
                             })}

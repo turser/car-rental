@@ -9,7 +9,7 @@ function Field({ label, required, children }) {
     return (
         <div>
             <label className="block text-xs font-medium text-stone-600 mb-1.5">
-                {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+                {label}{required && <span className="text-emerald-500 ml-0.5">*</span>}
             </label>
             {children}
         </div>
@@ -48,7 +48,7 @@ export default function ModifierImpot() {
                     date_d_échéance: tax.date_d_échéance ? tax.date_d_échéance.slice(0, 10) : '',
                     payé: !!tax.payé,
                 });
-                setCars(carsRes.data);
+                setCars(Array.isArray(carsRes.data) ? carsRes.data : carsRes.data?.data ?? []);
             })
             .catch(err => {
                 console.error('Erreur de chargement de l\'impôt:', err);
