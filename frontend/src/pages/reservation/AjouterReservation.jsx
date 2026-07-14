@@ -28,28 +28,64 @@ export default function AjouterReservation() {
         return `${datePart} ${time}`;
     };
 
+    // Avertit si l'assurance/l'impôt du véhicule est absent ou expire avant la fin de la location ;
+    // purement informatif, la création de réservation reste validée côté serveur.
+    // /available ne renvoie plus les infos assurance/impôt par voiture, donc on les récupère
+    // séparément via /insurances et /taxes (mêmes endpoints que les pages Assurances/Impôts).
+    const buildCarWarnings = (car, endDate, insurances, taxes) => {
+        if (!car || !endDate) return [];
+        const warnings = [];
+        const end = new Date(endDate);
+
+        const carInsurances = insurances.filter(i => i.car_id === car.id);
+        const latestInsurance = carInsurances.sort((a, b) => new Date(b.end_date) - new Date(a.end_date))[0];
+        if (!latestInsurance) warnings.push("Aucune assurance enregistrée pour ce véhicule.");
+        else if (new Date(latestInsurance.end_date) < end) warnings.push("L'assurance de ce véhicule expire avant la fin de la location.");
+
+        const carTaxes = taxes.filter(t => t.carId === car.id);
+        const hasPaidTaxForYear = carTaxes.some(t => t.année === end.getFullYear() && t.payé);
+        if (carTaxes.length === 0) warnings.push("Aucun impôt enregistré pour ce véhicule.");
+        else if (!hasPaidTaxForYear) warnings.push("L'impôt de ce véhicule n'est pas à jour pour la période de location.");
+
+        return warnings;
+    };
+
+    // Même règle que le serveur : le permis doit rester valide jusqu'à 10 jours après la fin de la
+    // location (marge de sécurité). S'il n'y a pas de date de permis enregistrée, on ne bloque pas.
+    const buildClientWarnings = (client, endDate) => {
+        if (!client?.driving_license_expiration || !endDate) return [];
+        const safetyDate = new Date(endDate);
+        safetyDate.setDate(safetyDate.getDate() + 10);
+        return new Date(client.driving_license_expiration) < safetyDate
+            ? ["Le permis de conduire de ce client expire trop tôt pour cette période de location."]
+            : [];
+    };
+
     const [step, setStep] = useState(0);
     const [dates, setDates] = useState({
         startDate: toDateTimeLocal(location.state?.startDate),
         endDate: toDateTimeLocal(location.state?.expectedReturnDate),
     });
     const [carId, setCarId] = useState(location.state?.carId ? String(location.state.carId) : '');
-    const [cars, setCars] = useState([]);
-    const [loadingCars, setLoadingCars] = useState(false);
-    const [imagesById, setImagesById] = useState({});
+    const [allCars, setAllCars] = useState([]);
+    const [loadingCars, setLoadingCars] = useState(true);
 
     const [services, setServices] = useState([]);
     const [selectedServices, setSelectedServices] = useState({}); // { [serviceId]: true }
+    const [serviceKm, setServiceKm] = useState({}); // { [serviceId]: km } — quantité envoyée pour les services "par km"
     const [pricePerDay, setPricePerDay] = useState('');
 
     const [clients, setClients] = useState([]);
     const [clientId, setClientId] = useState('');
+    const [insurances, setInsurances] = useState([]);
+    const [taxes, setTaxes] = useState([]);
 
     const [paymentMethod, setPaymentMethod] = useState('cash');
     const [paidAmount, setPaidAmount] = useState('');
 
     const [submitting, setSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState('');
+    const [blockingAlert, setBlockingAlert] = useState(null); // { title, messages, hint }
 
     const setDate = (key, val) => setDates(d => ({ ...d, [key]: val }));
 
@@ -67,18 +103,32 @@ export default function AjouterReservation() {
         });
     };
 
+    const setServiceKmValue = (id, val) => setServiceKm(prev => ({ ...prev, [id]: val }));
+
     useEffect(() => {
-        // /available ne renvoie pas les photos des voitures ; on les récupère depuis /cars (même source que la page Voitures).
+        // /available (recherche par dates) s'est révélé peu fiable (voitures louées listées à tort,
+        // voitures réellement disponibles absentes). On utilise donc directement /cars — la même
+        // source que la page Voitures — et on ne garde que celles au statut "available".
         api.get('/cars')
             .then(res => {
                 const carsList = Array.isArray(res.data) ? res.data : res.data?.data ?? [];
-                const map = Object.fromEntries(carsList.map(c => {
+                setAllCars(carsList.map(c => {
                     const img = c.images?.find(i => i.is_primary) || c.images?.[0];
-                    return [c.id, img?.image_path ?? null];
+                    return {
+                        id: c.id,
+                        brand: c.brand,
+                        model: c.model,
+                        registrationNumber: c.registration_number,
+                        dailyPrice: c.daily_price,
+                        fuelType: c.fuel_type,
+                        mileage: c.mileage,
+                        status: c.status,
+                        image: img?.image_path ?? null,
+                    };
                 }));
-                setImagesById(map);
             })
-            .catch(() => {});
+            .catch(() => {})
+            .finally(() => setLoadingCars(false));
 
         Promise.all([api.get('/createrental'), api.get('/clients')])
             .then(([createRes, clientsRes]) => {
@@ -92,26 +142,20 @@ export default function AjouterReservation() {
                 setClients(clientsList.filter(c => eligibleIds.has(c.id)));
             })
             .catch(() => {});
+
+        Promise.all([api.get('/insurances'), api.get('/taxes')])
+            .then(([insRes, taxRes]) => {
+                setInsurances(insRes.data ?? []);
+                setTaxes(taxRes.data ?? []);
+            })
+            .catch(() => {});
     }, []);
 
-    useEffect(() => {
-        if (!dates.startDate || !dates.endDate || dates.endDate <= dates.startDate) {
-            setCars([]);
-            return;
-        }
-        setLoadingCars(true);
-        api.get('/available', { params: { startDate: dates.startDate, endDate: dates.endDate } })
-            .then(res => {
-                const list = res.data?.data ?? [];
-                setCars(list);
-                setCarId(id => list.some(c => String(c.id) === String(id)) ? id : '');
-            })
-            .catch(() => setCars([]))
-            .finally(() => setLoadingCars(false));
-    }, [dates.startDate, dates.endDate]);
+    const availableCars = useMemo(() => allCars.filter(c => c.status === 'available'), [allCars]);
 
-    const selectedCar = cars.find(c => String(c.id) === String(carId));
-    const carImage = selectedCar ? (selectedCar.image ?? imagesById[selectedCar.id]) : null;
+    const selectedCar = availableCars.find(c => String(c.id) === String(carId));
+    const carImage = selectedCar?.image ?? null;
+    const selectedClient = clients.find(c => String(c.id) === String(clientId));
 
     useEffect(() => {
         if (selectedCar) setPricePerDay(String(selectedCar.dailyPrice));
@@ -129,10 +173,12 @@ export default function AjouterReservation() {
         return Object.keys(selectedServices).reduce((sum, id) => {
             const s = services.find(sv => String(sv.id) === id);
             if (!s) return sum;
-            const price = s.priceType === 'per_day' ? s.price * days : s.price;
+            const price = s.priceType === 'per_day' ? s.price * days
+                : s.priceType === 'per_km' ? s.price * Number(serviceKm[id] || 0)
+                : s.price;
             return sum + Number(price);
         }, 0);
-    }, [selectedServices, services, days]);
+    }, [selectedServices, services, days, serviceKm]);
 
     const totalPrice = basePrice + servicesTotal;
 
@@ -143,7 +189,23 @@ export default function AjouterReservation() {
         return true;
     }, [step, dates, loadingCars, carId, pricePerDay, clientId]);
 
-    const goNext = () => setStep(s => Math.min(s + 1, STEPS.length - 1));
+    const goNext = () => {
+        if (step === 0) {
+            const messages = buildCarWarnings(selectedCar, dates.endDate, insurances, taxes);
+            if (messages.length > 0) {
+                setBlockingAlert({ title: 'Ce véhicule ne peut pas être réservé', messages, hint: 'Fermez ce message et choisissez un autre véhicule.' });
+                return;
+            }
+        }
+        if (step === 2) {
+            const messages = buildClientWarnings(selectedClient, dates.endDate);
+            if (messages.length > 0) {
+                setBlockingAlert({ title: 'Ce client ne peut pas être sélectionné', messages, hint: 'Fermez ce message et choisissez un autre client.' });
+                return;
+            }
+        }
+        setStep(s => Math.min(s + 1, STEPS.length - 1));
+    };
     const goPrev = () => setStep(s => Math.max(s - 1, 0));
 
     const isLastStep = step === STEPS.length - 1;
@@ -158,7 +220,11 @@ export default function AjouterReservation() {
                 startDate: toApiDateTime(dates.startDate),
                 expectedReturnDate: toApiDateTime(dates.endDate),
                 pricePerDay,
-                services: Object.keys(selectedServices).map(id => ({ serviceId: Number(id), quantity: 1 })),
+                services: Object.keys(selectedServices).map(id => {
+                    const s = services.find(sv => String(sv.id) === id);
+                    const quantity = s?.priceType === 'per_km' ? Number(serviceKm[id] || 1) : 1;
+                    return { serviceId: Number(id), quantity };
+                }),
             };
             if (paidAmount !== '') {
                 payload.paidAmount = paidAmount;
@@ -218,7 +284,7 @@ export default function AjouterReservation() {
 
                 <div className="px-8 py-8">
                     {step === 0 ? (
-                        <StepDates dates={dates} setDate={setDate} cars={cars} loadingCars={loadingCars} carId={carId} onSelectCar={setCarId} imagesById={imagesById} />
+                        <StepDates dates={dates} setDate={setDate} cars={availableCars} loadingCars={loadingCars} carId={carId} onSelectCar={setCarId} />
                     ) : step === 1 ? (
                         <StepDetails
                             car={selectedCar}
@@ -228,6 +294,8 @@ export default function AjouterReservation() {
                             services={services}
                             selectedServices={selectedServices}
                             toggleService={toggleService}
+                            serviceKm={serviceKm}
+                            setServiceKm={setServiceKmValue}
                             pricePerDay={pricePerDay}
                             setPricePerDay={setPricePerDay}
                             basePrice={basePrice}
@@ -295,6 +363,33 @@ export default function AjouterReservation() {
                     </div>
                 </div>
             </motion.div>
+
+            {/* Alerte bloquante : véhicule (assurance/impôt) ou client (permis) inéligible */}
+            {blockingAlert && (
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4" onClick={() => setBlockingAlert(null)}>
+                    <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6" onClick={e => e.stopPropagation()}>
+                        <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-4">
+                            <i className="ti ti-alert-triangle text-red-600 text-xl" />
+                        </div>
+                        <h3 className="text-base font-semibold text-stone-900 mb-2">{blockingAlert.title}</h3>
+                        <ul className="space-y-1.5 mb-5">
+                            {blockingAlert.messages.map(m => (
+                                <li key={m} className="flex items-start gap-2 text-sm text-red-600">
+                                    <i className="ti ti-x text-[14px] mt-0.5 flex-shrink-0" /> {m}
+                                </li>
+                            ))}
+                        </ul>
+                        <p className="text-xs text-stone-500 mb-4">{blockingAlert.hint}</p>
+                        <button
+                            type="button"
+                            onClick={() => setBlockingAlert(null)}
+                            className="w-full px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-sm font-medium transition"
+                        >
+                            Fermer
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

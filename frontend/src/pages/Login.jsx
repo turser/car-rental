@@ -3,6 +3,7 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { motion, useMotionValue, useMotionTemplate, useSpring } from 'framer-motion';
 import api from '../api/api';
+import { translateError } from '../utils/translateError';
 
 // Page de connexion : authentifie l'utilisateur via l'API et redirige vers le dashboard.
 export default function Login() {
@@ -34,10 +35,22 @@ export default function Login() {
         setLoading(true);
         try {
             const res = await api.post('/login', { email, password });
-            dispatch({ type: 'auth/login', payload: { token: res.data.token, user: res.data.user } });
+            // /login renvoie parfois un rôle périmé (ex: "admin" au lieu de "owner") ;
+            // /me reflète l'état réel de l'utilisateur, donc on s'en sert comme source de vérité.
+            let user = res.data.user;
+            try {
+                const meRes = await api.get('/me', { headers: { Authorization: `Bearer ${res.data.token}` } });
+                user = meRes.data;
+            } catch (meErr) {
+                // Un compte désactivé se connecte avec succès via /login (le backend ne le bloque
+                // pas à cette étape) mais /me renvoie 403 juste après : on doit refuser la connexion
+                // dans ce cas précis, plutôt que de continuer avec l'utilisateur de /login.
+                if (meErr.response?.status === 403) throw meErr;
+            }
+            dispatch({ type: 'auth/login', payload: { token: res.data.token, user } });
             navigate('/');
-        } catch {
-            setError('Email ou mot de passe incorrect.');
+        } catch (err) {
+            setError(translateError(err.response?.data?.message) || 'Email ou mot de passe incorrect.');
         } finally {
             setLoading(false);
         }
@@ -105,9 +118,9 @@ export default function Login() {
                         />
 
                         <div className="flex items-center justify-between pt-1">
-                            <button type="button" className="text-xs italic text-emerald-100/70 hover:text-white transition">
-                                Mot de passe oublié
-                            </button>
+                            <div className="text-xs italic">
+                                
+                            </div>
                             <motion.button
                                 whileHover={{ x: 3 }}
                                 whileTap={{ scale: 0.95 }}

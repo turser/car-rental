@@ -176,7 +176,6 @@ export default function AjouterUser() {
                             >
                                 <option value="employee">Employé</option>
                                 <option value="admin">Administrateur</option>
-                                <option value="owner">Propriétaire</option>
                             </select>
                         </Field>
                         <Field label="Statut">

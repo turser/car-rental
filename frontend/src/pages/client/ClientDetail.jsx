@@ -6,7 +6,7 @@ import api from '../../api/api';
 const RENTAL_STATUS = {
     completed: { label: 'Terminée',   cls: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' },
     active:    { label: 'En cours',   cls: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200' },
-    cancelled: { label: 'Annulée',    cls: 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200' },
+    canceled: { label: 'Annulée',    cls: 'bg-red-50 text-red-600 ring-1 ring-red-200' },
     pending:   { label: 'En attente', cls: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200' },
 };
 

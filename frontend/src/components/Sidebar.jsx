@@ -132,7 +132,7 @@ export default function Sidebar() {
                         className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-md text-sm font-medium text-white/60 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                     >
                         <i className="ti ti-logout text-[15px]" />
-                        Sortir
+                        Déconnexion
                     </button>
                 </div>
             </div>

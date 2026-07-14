@@ -126,7 +126,8 @@ export default function ModifierUser() {
                             >
                                 <option value="employee">Employé</option>
                                 <option value="admin">Administrateur</option>
-                                <option value="owner">Propriétaire</option>
+                                {/* Pas d'option pour promouvoir quelqu'un owner ; affichée seulement si déjà owner, pour ne pas casser l'affichage existant. */}
+                                {form.role === 'owner' && <option value="owner">Propriétaire</option>}
                             </select>
                         </Field>
                         <Field label="Statut">

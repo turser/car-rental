@@ -71,12 +71,17 @@ export default function Facture() {
             <div className="bg-white border border-stone-200 rounded-lg shadow-sm p-8 print:shadow-none print:border-0">
                 {/* En-tête */}
                 <div className="flex items-start justify-between pb-6 border-b border-stone-200">
-                    <div>
-                        <p className="text-lg font-bold text-stone-900">{agency?.name}</p>
-                        {agency?.address && <p className="text-sm text-stone-500 mt-0.5">{agency.address}</p>}
-                        <p className="text-sm text-stone-500 mt-0.5">
-                            {[agency?.phone, agency?.email].filter(Boolean).join(' · ') || '—'}
-                        </p>
+                    <div className="flex items-start gap-4">
+                        <div className="px-0 py-0 flex-shrink-0" style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+                            <img src="/logo-facture.png" alt="Hayas" className="h-9 w-auto object-contain" />
+                        </div>
+                        <div>
+                            <p className="text-lg font-bold text-stone-900">{agency?.name}</p>
+                            {agency?.address && <p className="text-sm text-stone-500 mt-0.5">{agency.address}</p>}
+                            <p className="text-sm text-stone-500 mt-0.5">
+                                {[agency?.phone, agency?.email].filter(Boolean).join(' · ') || '—'}
+                            </p>
+                        </div>
                     </div>
                     <div className="text-right">
                         <h1 className="text-2xl font-bold text-stone-900 tracking-tight">FACTURE</h1>

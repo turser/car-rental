@@ -5,6 +5,7 @@
 
 const EXACT_MATCHES = {
     'Invalid credentials': 'Email ou mot de passe incorrect.',
+    'Your account has been suspended. Please contact your administrator.': 'Votre compte a été désactivé. Contactez votre administrateur.',
     'Driving license will expire too soon for this rental period.': 'Le permis de conduire du client expire trop tôt pour cette période de location.',
     'This car does not belong to your agency.': 'Cette voiture n\'appartient pas à votre agence.',
     'Car is not available.': 'Cette voiture n\'est pas disponible.',

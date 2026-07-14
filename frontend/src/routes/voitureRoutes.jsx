@@ -9,7 +9,7 @@ import RoleRoute from '../components/RoleRoute';
 const voitureRoutes = [
     { path: '/voitures', element: <Voitures /> },
     { path: '/voitures/ajouter', element: <RoleRoute roles={['admin']} redirectTo="/voitures"><AjouterVoiture /></RoleRoute> },
-    { path: '/voitures/vendues', element: <VoituresVendues /> },
+    { path: '/voitures/vendues', element: <RoleRoute roles={['owner', 'admin']} redirectTo="/voitures"><VoituresVendues /></RoleRoute> },
     { path: '/voitures/:id/modifier', element: <ModifierVoiture /> },
     { path: '/voitures/:id', element: <VoitureDetail /> },
 ];

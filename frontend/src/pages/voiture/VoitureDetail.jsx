@@ -17,7 +17,7 @@ const FUEL = { diesel: 'Diesel', petrol: 'Essence', electric: 'Électrique', hyb
 const RENTAL_STATUS = {
     completed: { label: 'Terminée',   cls: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' },
     active:    { label: 'En cours',   cls: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200' },
-    cancelled: { label: 'Annulée',    cls: 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200' },
+    canceled: { label: 'Annulée',    cls: 'bg-red-50 text-red-600 ring-1 ring-red-200' },
     pending:   { label: 'En attente', cls: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200' },
 };
 
@@ -195,9 +195,9 @@ const MODALS = {
         icon: 'ti-receipt-tax',
         endpoint: '/taxes',
         fields: [
-            { name: 'année',              label: 'Année',            type: 'date',   required: true, full: true },
+            { name: 'année',              label: 'Année',            type: 'number', required: true, full: true },
             { name: 'montant',            label: 'Montant (MAD)',    type: 'number', required: true },
-            { name: "date_d'échéance",    label: 'Échéance',         type: 'date',   required: true },
+            { name: 'datedéchéance',      label: 'Échéance',         type: 'date',   required: true },
             { name: 'payé',               label: 'Déjà payé',        type: 'checkbox' },
         ],
     },
@@ -372,7 +372,7 @@ function DataTable({ headers, rows, empty, icon }) {
 export default function VoitureDetail() {
     const { id }   = useParams();
     const navigate = useNavigate();
-    const isAdmin  = useSelector(state => state.auth.user?.role === 'admin');
+    const isOwner  = useSelector(state => state.auth.user?.role === 'owner');
     const [car, setCar]               = useState(null);
     const [loading, setLoading]       = useState(true);
     const [error, setError]           = useState('');
@@ -463,7 +463,7 @@ export default function VoitureDetail() {
                     </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                    {isAdmin && (
+                    {isOwner && (
                         <button
                             onClick={() => setModal('sale')}
                             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md border border-stone-300 text-stone-600 text-sm font-medium hover:bg-stone-50 transition"

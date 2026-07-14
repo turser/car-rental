@@ -28,8 +28,11 @@ export default function Assurances() {
 
     const filtered = insurances.filter(ins => {
         const q = search.toLowerCase();
+        const car = carsById[ins.car_id];
         return ins.company.toLowerCase().includes(q)
-            || ins.contract_number.toLowerCase().includes(q);
+            || ins.contract_number.toLowerCase().includes(q)
+            || car?.brand?.toLowerCase().includes(q)
+            || car?.model?.toLowerCase().includes(q);
     });
 
     if (loading) return (
@@ -80,7 +83,7 @@ export default function Assurances() {
                 <i className="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-[15px]" />
                 <input
                     type="text"
-                    placeholder="Rechercher par compagnie, n° de contrat…"
+                    placeholder="Rechercher par compagnie, n° de contrat, voiture…"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     className="w-full bg-white border border-stone-300 text-stone-900 placeholder-stone-400 pl-9 pr-3 py-2 rounded-md text-sm focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition"
@@ -97,7 +100,7 @@ export default function Assurances() {
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="border-b border-stone-200 bg-stone-50">
-                                {['Compagnie', 'N° de contrat', 'Voiture', 'Prix', 'Début', 'Fin', ''].map(h => (
+                                {['Voiture', 'Compagnie', 'N° de contrat', 'Prix', 'Début', 'Fin', ''].map(h => (
                                     <th key={h} className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wider">{h}</th>
                                 ))}
                             </tr>
@@ -113,9 +116,14 @@ export default function Assurances() {
                                     onClick={() => navigate(`/voitures/${ins.car_id}`)}
                                     className="hover:bg-stone-50/70 transition-colors cursor-pointer"
                                 >
+                                    <td className="px-5 py-3.5">
+                                        <p className="font-medium text-stone-900">
+                                            {carsById[ins.car_id] ? `${carsById[ins.car_id].brand} ${carsById[ins.car_id].model}` : `#${ins.car_id}`}
+                                        </p>
+                                        <p className="font-mono text-xs text-stone-400">{carsById[ins.car_id]?.registration_number}</p>
+                                    </td>
                                     <td className="px-5 py-3.5 font-medium text-stone-900">{ins.company}</td>
                                     <td className="px-5 py-3.5 font-mono text-xs text-stone-500">{ins.contract_number}</td>
-                                    <td className="px-5 py-3.5 font-mono text-xs text-stone-600">{carsById[ins.car_id]?.registration_number ?? `#${ins.car_id}`}</td>
                                     <td className="px-5 py-3.5 text-stone-600">{fmtPrice(ins.price)}</td>
                                     <td className="px-5 py-3.5 text-stone-600">{fmtDate(ins.start_date)}</td>
                                     <td className="px-5 py-3.5 text-stone-600">{fmtDate(ins.end_date)}</td>

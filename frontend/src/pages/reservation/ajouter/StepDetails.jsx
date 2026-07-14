@@ -1,6 +1,6 @@
 import { fmtMAD, fmtDate } from './constants';
 
-export default function StepDetails({ car, img, dates, days, services, selectedServices, toggleService, pricePerDay, setPricePerDay, basePrice, servicesTotal, totalPrice }) {
+export default function StepDetails({ car, img, dates, days, services, selectedServices, toggleService, serviceKm, setServiceKm, pricePerDay, setPricePerDay, basePrice, servicesTotal, totalPrice }) {
     const inputCls = 'w-full bg-white border border-stone-300 text-stone-900 placeholder-stone-400 px-3 py-2.5 rounded-xl text-sm focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition';
 
     return (
@@ -69,22 +69,33 @@ export default function StepDetails({ car, img, dates, days, services, selectedS
                     <div className="space-y-2">
                         {services.map(s => {
                             const checked = s.id in selectedServices;
+                            const isPerKm = s.priceType === 'per_km';
                             return (
-                                <label
+                                <div
                                     key={s.id}
-                                    className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-stone-200 cursor-pointer hover:bg-stone-50 transition"
+                                    className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-stone-200 hover:bg-stone-50 transition"
                                 >
-                                    <span className="flex items-center gap-3">
+                                    <label className="flex items-center gap-3 cursor-pointer flex-1 min-w-0">
                                         <input
                                             type="checkbox"
                                             checked={checked}
                                             onChange={() => toggleService(s.id)}
-                                            className="w-4 h-4 accent-emerald-600 rounded-sm"
+                                            className="w-4 h-4 accent-emerald-600 rounded-sm flex-shrink-0"
                                         />
-                                        <span className="text-sm text-stone-800">{s.serviceName}</span>
-                                    </span>
-                                    <span className="text-sm text-stone-500">{fmtMAD(s.price)}</span>
-                                </label>
+                                        <span className="text-sm text-stone-800 truncate">{s.serviceName}</span>
+                                    </label>
+                                    {checked && isPerKm && (
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            placeholder="Km"
+                                            value={serviceKm[s.id] ?? ''}
+                                            onChange={e => setServiceKm(s.id, e.target.value)}
+                                            className="w-20 flex-shrink-0 bg-white border border-stone-300 text-stone-900 placeholder-stone-400 px-2 py-1.5 rounded-lg text-sm focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition"
+                                        />
+                                    )}
+                                    <span className="text-sm text-stone-500 flex-shrink-0">{fmtMAD(s.price)}{isPerKm && '/km'}</span>
+                                </div>
                             );
                         })}
                     </div>

@@ -1,6 +1,6 @@
 import { FUEL_BADGE } from './constants';
 
-export default function StepDates({ dates, setDate, cars, loadingCars, carId, onSelectCar, imagesById }) {
+export default function StepDates({ dates, setDate, cars, loadingCars, carId, onSelectCar }) {
     const inputCls = 'w-full bg-white border border-stone-300 text-stone-900 placeholder-stone-400 pl-10 pr-3 py-2.5 rounded-xl text-sm focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition';
     const hasDates = dates.startDate && dates.endDate;
 
@@ -55,7 +55,7 @@ export default function StepDates({ dates, setDate, cars, loadingCars, carId, on
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                             {cars.map(car => {
                                 const selected = String(carId) === String(car.id);
-                                const img = car.image ?? imagesById[car.id];
+                                const img = car.image;
                                 const fuel = FUEL_BADGE[(car.fuelType || '').toLowerCase()] ?? { label: car.fuelType, cls: 'bg-stone-100 text-stone-600 ring-1 ring-stone-200' };
                                 return (
                                     <button

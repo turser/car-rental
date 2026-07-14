@@ -196,7 +196,9 @@ function CarGridCard({ car, navigate, index }) {
 }
 
 export default function Voitures() {
-    const isAdmin = useSelector(state => state.auth.user?.role === 'admin');
+    const role = useSelector(state => state.auth.user?.role);
+    const isAdmin = role === 'admin';
+    const canViewSales = role === 'owner' || role === 'admin';
 
     const [cars, setCars]       = useState([]);
     const [loading, setLoading] = useState(true);
@@ -277,16 +279,18 @@ export default function Voitures() {
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.94 }}
-                        transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                        onClick={() => navigate('/voitures/vendues')}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md border border-stone-300 text-stone-600 text-sm font-medium hover:bg-stone-50 transition-colors"
-                    >
-                        <i className="ti ti-cash-banknote text-[14px]" />
-                        Voitures vendues
-                    </motion.button>
+                    {canViewSales && (
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.94 }}
+                            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                            onClick={() => navigate('/voitures/vendues')}
+                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md border border-stone-300 text-stone-600 text-sm font-medium hover:bg-stone-50 transition-colors"
+                        >
+                            <i className="ti ti-cash-banknote text-[14px]" />
+                            Voitures vendues
+                        </motion.button>
+                    )}
                     {isAdmin && (
                         <motion.button
                             whileHover={{ scale: 1.05 }}

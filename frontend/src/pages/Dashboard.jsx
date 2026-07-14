@@ -55,13 +55,68 @@ const FUEL_ICON = {
     hybrid:   { label: 'Hybride',    icon: 'ti-leaf' },
 };
 
+const startOfDay = d => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
+const isSameDay = (a, b) => startOfDay(a).getTime() === startOfDay(b).getTime();
+
+// Reproduit côté client le filtre de chaque alerte du dashboard (mêmes règles que
+// DashboardController::index) pour retrouver le ou les enregistrements concernés,
+// et permettre de sauter directement à son détail plutôt qu'à la liste générale.
 const ALERT_DEFS = [
-    { key: 'rentalsEndingToday',    icon: 'ti-clock-hour-4', label: 'Retours prévus aujourd\'hui' },
-    { key: 'rentalsEndingSoon',     icon: 'ti-calendar-due',  label: 'Retours prévus bientôt' },
-    { key: 'unpaidRentals',         icon: 'ti-receipt-off',   label: 'Réservations impayées' },
-    { key: 'insuranceExpiringSoon', icon: 'ti-shield-off',    label: 'Assurances qui expirent' },
-    { key: 'taxExpiringSoon',       icon: 'ti-file-alert',    label: 'Impôts qui expirent' },
-    { key: 'longMaintenance',       icon: 'ti-tool',          label: 'Maintenances longues' },
+    {
+        key: 'rentalsEndingToday', icon: 'ti-clock-hour-4', label: "Retours prévus aujourd'hui", listTo: '/reservations',
+        resolve: async () => {
+            const res = await api.get('/rentals');
+            const today = new Date();
+            const items = (res.data?.data ?? []).filter(r => r.status === 'active' && isSameDay(r.end_date, today));
+            return { items, detailTo: r => `/reservations/${r.id}` };
+        },
+    },
+    {
+        key: 'rentalsEndingSoon', icon: 'ti-calendar-due', label: 'Retours prévus bientôt', listTo: '/reservations',
+        resolve: async () => {
+            const res = await api.get('/rentals');
+            const from = startOfDay(new Date());
+            const to = startOfDay(new Date()); to.setDate(to.getDate() + 3);
+            const items = (res.data?.data ?? []).filter(r => r.status === 'active' && new Date(r.end_date) >= from && new Date(r.end_date) <= to);
+            return { items, detailTo: r => `/reservations/${r.id}` };
+        },
+    },
+    {
+        key: 'unpaidRentals', icon: 'ti-receipt-off', label: 'Réservations impayées', listTo: '/reservations',
+        resolve: async () => {
+            const res = await api.get('/rentals');
+            const items = (res.data?.data ?? []).filter(r => r.status === 'active' && Number(r.paid_amount) < Number(r.total_price));
+            return { items, detailTo: r => `/reservations/${r.id}` };
+        },
+    },
+    {
+        key: 'insuranceExpiringSoon', icon: 'ti-shield-off', label: 'Assurances qui expirent', listTo: '/assurance',
+        resolve: async () => {
+            const res = await api.get('/insurances');
+            const from = startOfDay(new Date());
+            const to = startOfDay(new Date()); to.setDate(to.getDate() + 30);
+            const items = (res.data ?? []).filter(i => new Date(i.end_date) >= from && new Date(i.end_date) <= to);
+            return { items, detailTo: i => `/voitures/${i.car_id}` };
+        },
+    },
+    {
+        key: 'taxExpiringSoon', icon: 'ti-file-alert', label: 'Impôts qui expirent', listTo: '/impots',
+        resolve: async () => {
+            const res = await api.get('/taxes');
+            const year = new Date().getFullYear();
+            const items = (res.data ?? []).filter(t => t.année === year && !t.payé);
+            return { items, detailTo: t => `/voitures/${t.car?.id}` };
+        },
+    },
+    {
+        key: 'longMaintenance', icon: 'ti-tool', label: 'Maintenances longues', listTo: '/maintenance',
+        resolve: async () => {
+            const res = await api.get('/maintenance');
+            const cutoff = startOfDay(new Date()); cutoff.setDate(cutoff.getDate() - 7);
+            const items = (res.data ?? []).filter(m => m.status === 'in_progress' && new Date(m.maintenanceDate) <= cutoff);
+            return { items, detailTo: m => `/maintenance/${m.id}/modifier` };
+        },
+    },
 ];
 
 const inputCls = 'w-full bg-white border border-stone-300 text-stone-900 placeholder-stone-400 px-3 py-2 rounded-md text-sm focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition';
@@ -353,8 +408,28 @@ function ChartTooltip({ active, payload, label }) {
 
 export default function Dashboard() {
     const user = useSelector(state => state.auth.user);
-    const isAdmin = user?.role === 'admin';
+    const canSeeRevenue = user?.role === 'admin' || user?.role === 'owner';
     const navigate = useNavigate();
+    const [resolvingAlert, setResolvingAlert] = useState(null);
+    const [hiddenSeries, setHiddenSeries] = useState(() => new Set());
+
+    const toggleSeries = (name) => setHiddenSeries(prev => {
+        const next = new Set(prev);
+        next.has(name) ? next.delete(name) : next.add(name);
+        return next;
+    });
+
+    const handleAlertClick = async (alertDef) => {
+        setResolvingAlert(alertDef.key);
+        try {
+            const { items, detailTo } = await alertDef.resolve();
+            navigate(items.length === 1 ? detailTo(items[0]) : alertDef.listTo);
+        } catch {
+            navigate(alertDef.listTo);
+        } finally {
+            setResolvingAlert(null);
+        }
+    };
 
     const [data, setData]       = useState(null);
     const [loading, setLoading] = useState(true);
@@ -401,7 +476,7 @@ export default function Dashboard() {
     const kpis = [
         { label: 'Véhicules disponibles', value: `${general.cars.available}/${general.cars.total}`, icon: 'ti-car',          accent: 'text-emerald-700 bg-emerald-50' },
         { label: 'Réservations en cours', value: general.rentals.active,                             icon: 'ti-key',          accent: 'text-blue-700 bg-blue-50' },
-        ...(isAdmin ? [{ label: 'Revenus (période)', value: fmtPrice(financial.totalRevenue), icon: 'ti-cash', accent: 'text-stone-700 bg-stone-100' }] : []),
+        ...(canSeeRevenue ? [{ label: 'Revenus (période)', value: fmtPrice(financial.totalRevenue), icon: 'ti-cash', accent: 'text-stone-700 bg-stone-100' }] : []),
         { label: 'Reste à encaisser',     value: fmtPrice(financial.totalRemaining),                  icon: 'ti-hourglass',    accent: 'text-amber-700 bg-amber-50' },
     ];
 
@@ -492,12 +567,20 @@ export default function Dashboard() {
                             <i className="ti ti-chart-line text-emerald-500" /> {PERIOD_TITLE[period]}
                         </h2>
                         <div className="flex items-center gap-4">
-                            {Object.entries(SERIES).map(([name, c]) => (
-                                <span key={name} className="inline-flex items-center gap-1.5 text-xs text-stone-500">
-                                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: c.dot }} />
-                                    {name}
-                                </span>
-                            ))}
+                            {Object.entries(SERIES).map(([name, c]) => {
+                                const isHidden = hiddenSeries.has(name);
+                                return (
+                                    <button
+                                        key={name}
+                                        type="button"
+                                        onClick={() => toggleSeries(name)}
+                                        className={`inline-flex items-center gap-1.5 text-xs transition-opacity ${isHidden ? 'text-stone-300' : 'text-stone-500'} hover:opacity-70`}
+                                    >
+                                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: isHidden ? '#d6d3d1' : c.dot }} />
+                                        {name}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
                     <div className="h-64 mt-3 -ml-2">
@@ -512,28 +595,41 @@ export default function Dashboard() {
                                     tickLine={false}
                                 />
                                 <YAxis
+                                    yAxisId="left"
                                     allowDecimals={false}
                                     width={28}
-                                    tick={{ fontSize: 11, fill: '#a8a29e' }}
+                                    tick={{ fontSize: 11, fill: SERIES.Réservations.stroke }}
+                                    axisLine={false}
+                                    tickLine={false}
+                                />
+                                <YAxis
+                                    yAxisId="right"
+                                    orientation="right"
+                                    width={36}
+                                    tick={{ fontSize: 11, fill: SERIES.Paiements.stroke }}
                                     axisLine={false}
                                     tickLine={false}
                                 />
                                 <Tooltip content={<ChartTooltip />} cursor={{ stroke: '#e7e5e4', strokeWidth: 1 }} />
                                 <Line
+                                    yAxisId="left"
                                     type="monotone"
                                     dataKey="Réservations"
                                     stroke={SERIES.Réservations.stroke}
                                     strokeWidth={2}
                                     dot={false}
                                     activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff' }}
+                                    hide={hiddenSeries.has('Réservations')}
                                 />
                                 <Line
+                                    yAxisId="right"
                                     type="monotone"
                                     dataKey="Paiements"
                                     stroke={SERIES.Paiements.stroke}
                                     strokeWidth={2}
                                     dot={false}
                                     activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff' }}
+                                    hide={hiddenSeries.has('Paiements')}
                                 />
                             </LineChart>
                         </ResponsiveContainer>
@@ -589,19 +685,30 @@ export default function Dashboard() {
                         ) : (
                             <div className="space-y-2">
                                 {activeAlerts.map((a, index) => (
-                                    <motion.div
+                                    <motion.button
                                         key={a.key}
+                                        type="button"
+                                        onClick={() => handleAlertClick(a)}
+                                        disabled={resolvingAlert === a.key}
                                         initial={{ opacity: 0, x: 12 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ type: 'spring', stiffness: 300, damping: 26, delay: index * 0.05 }}
-                                        className="flex items-center gap-3 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2.5"
+                                        whileHover={{ x: 2 }}
+                                        className="w-full flex items-center gap-3 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2.5 hover:bg-amber-100/70 hover:border-amber-200 transition-colors text-left disabled:opacity-60 disabled:cursor-wait"
                                     >
                                         <div className="w-7 h-7 rounded-md bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0">
                                             <i className={`ti ${a.icon} text-[14px]`} />
                                         </div>
                                         <span className="text-xs text-amber-800 flex-1">{a.label}</span>
                                         <span className="text-sm font-bold text-amber-700">{a.count}</span>
-                                    </motion.div>
+                                        {resolvingAlert === a.key ? (
+                                            <svg className="animate-spin h-3.5 w-3.5 text-amber-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                                <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+                                            </svg>
+                                        ) : (
+                                            <i className="ti ti-chevron-right text-amber-500 text-[13px] flex-shrink-0" />
+                                        )}
+                                    </motion.button>
                                 ))}
                             </div>
                         )}

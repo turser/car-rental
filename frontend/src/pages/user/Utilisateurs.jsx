@@ -29,6 +29,8 @@ export default function Utilisateurs() {
     const [loading, setLoading] = useState(true);
     const [error, setError]     = useState('');
     const [search, setSearch]   = useState('');
+    const [togglingId, setTogglingId] = useState(null);
+    const [toggleError, setToggleError] = useState('');
 
     useEffect(() => {
         api.get('/users')
@@ -36,6 +38,22 @@ export default function Utilisateurs() {
             .catch(() => setError('Erreur lors du chargement des utilisateurs.'))
             .finally(() => setLoading(false));
     }, []);
+
+    const handleToggleStatus = async (userId) => {
+        setTogglingId(userId);
+        setToggleError('');
+        try {
+            const res = await api.get(`/user/${userId}/toggleStatus`);
+            const isActive = (res.data?.data ?? res.data)?.isActive;
+            setUsers(us => us.map(u => u.id === userId
+                ? { ...u, is_active: isActive ?? !u.is_active }
+                : u));
+        } catch {
+            setToggleError('Erreur lors du changement de statut.');
+        } finally {
+            setTogglingId(null);
+        }
+    };
 
     const filtered = users.filter(u => {
         const q = search.toLowerCase();
@@ -88,6 +106,12 @@ export default function Utilisateurs() {
                     </motion.button>
                 )}
             </div>
+
+            {toggleError && (
+                <div className="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-3 rounded-lg border border-red-200 text-sm mb-5">
+                    <i className="ti ti-alert-circle" /> {toggleError}
+                </div>
+            )}
 
             {/* Search */}
             <div className="relative mb-5 max-w-sm">
@@ -152,13 +176,29 @@ export default function Utilisateurs() {
                                         <td className="px-5 py-3.5 text-stone-600">{fmtDate(user.created_at)}</td>
                                         <td className="px-5 py-3.5 text-right">
                                             {canManage && (
-                                                <button
-                                                    onClick={() => navigate(`/utilisateurs/${user.id}/modifier`)}
-                                                    title="Modifier"
-                                                    className="w-8 h-8 rounded-md border border-stone-200 text-stone-400 hover:text-emerald-600 hover:bg-emerald-50 hover:border-emerald-200 transition-colors inline-flex items-center justify-center"
-                                                >
-                                                    <i className="ti ti-pencil text-[14px]" />
-                                                </button>
+                                                <div className="inline-flex items-center gap-1.5">
+                                                    <button
+                                                        onClick={() => handleToggleStatus(user.id)}
+                                                        disabled={togglingId === user.id}
+                                                        title={user.is_active ? 'Désactiver' : 'Activer'}
+                                                        className="w-8 h-8 rounded-md border border-stone-200 text-stone-400 hover:text-amber-600 hover:bg-amber-50 hover:border-amber-200 transition-colors inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        {togglingId === user.id ? (
+                                                            <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                                                <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+                                                            </svg>
+                                                        ) : (
+                                                            <i className={`ti ${user.is_active ? 'ti-lock' : 'ti-lock-open'} text-[14px]`} />
+                                                        )}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => navigate(`/utilisateurs/${user.id}/modifier`)}
+                                                        title="Modifier"
+                                                        className="w-8 h-8 rounded-md border border-stone-200 text-stone-400 hover:text-emerald-600 hover:bg-emerald-50 hover:border-emerald-200 transition-colors inline-flex items-center justify-center"
+                                                    >
+                                                        <i className="ti ti-pencil text-[14px]" />
+                                                    </button>
+                                                </div>
                                             )}
                                         </td>
                                     </motion.tr>
