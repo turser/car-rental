@@ -97,74 +97,94 @@ class DashboardController extends Controller
     }
 
     private function getPaymentsPerHour($rentalIds, Carbon $date): array
-{
-    $data = Payment::whereIn('rental_id', $rentalIds)
-        ->whereDate('payment_date', $date)
-        ->selectRaw('HOUR(created_at) as hour, SUM(amount) as total')
-        ->groupBy('hour')
-        ->orderBy('hour')
-        ->get()
-        ->mapWithKeys(fn($p) => [(int) $p->hour => $p->total])
-        ->toArray();
+    {
+        $data = Payment::whereIn('rental_id', $rentalIds)
+            ->whereDate('payment_date', $date)
+            ->selectRaw('HOUR(created_at) as hour, SUM(amount) as total')
+            ->groupBy('hour')
+            ->orderBy('hour')
+            ->get()
+            ->mapWithKeys(fn($p) => [(int) $p->hour => $p->total])
+            ->toArray();
 
-    $result = [];
+        $result = [];
 
-    for ($hour = 0; $hour < 24; $hour++) {
-        $result[sprintf('%02d:00', $hour)] = $data[$hour] ?? 0;
+        for ($hour = 0; $hour < 24; $hour++) {
+            $result[sprintf('%02d:00', $hour)] = $data[$hour] ?? 0;
+        }
+
+        return $result;
     }
 
-    return $result;
-}
+    private function getRentalsPerMonth(int $agencyId, Carbon $date): array
+    {
+        $data = Rental::where('agency_id', $agencyId)
+            ->whereYear('start_date', $date->year)
+            ->selectRaw('MONTH(start_date) as month, COUNT(*) as count')
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get()
+            ->mapWithKeys(fn($r) => [(int) $r->month => $r->count])
+            ->toArray();
 
-private function getRentalsPerMonth(int $agencyId, Carbon $date): array
-{
-    $data = Rental::where('agency_id', $agencyId)
-        ->whereYear('start_date', $date->year)
-        ->selectRaw('MONTH(start_date) as month, COUNT(*) as count')
-        ->groupBy('month')
-        ->orderBy('month')
-        ->get()
-        ->mapWithKeys(fn($r) => [(int) $r->month => $r->count])
-        ->toArray();
+        $months = [
+            'Jan',
+            'Feb',
+            'Mar',
+            'Apr',
+            'May',
+            'Jun',
+            'Jul',
+            'Aug',
+            'Sep',
+            'Oct',
+            'Nov',
+            'Dec'
+        ];
 
-    $months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
+        $result = [];
 
-    $result = [];
+        foreach ($months as $index => $month) {
+            $result[$month] = $data[$index + 1] ?? 0;
+        }
 
-    foreach ($months as $index => $month) {
-        $result[$month] = $data[$index + 1] ?? 0;
+        return $result;
     }
 
-    return $result;
-}
+    private function getPaymentsPerMonth($rentalIds, Carbon $date): array
+    {
+        $data = Payment::whereIn('rental_id', $rentalIds)
+            ->whereYear('payment_date', $date->year)
+            ->selectRaw('MONTH(payment_date) as month, SUM(amount) as total')
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get()
+            ->mapWithKeys(fn($p) => [(int) $p->month => $p->total])
+            ->toArray();
 
-private function getPaymentsPerMonth($rentalIds, Carbon $date): array
-{
-    $data = Payment::whereIn('rental_id', $rentalIds)
-        ->whereYear('payment_date', $date->year)
-        ->selectRaw('MONTH(payment_date) as month, SUM(amount) as total')
-        ->groupBy('month')
-        ->orderBy('month')
-        ->get()
-        ->mapWithKeys(fn($p) => [(int) $p->month => $p->total])
-        ->toArray();
+        $months = [
+            'Jan',
+            'Feb',
+            'Mar',
+            'Apr',
+            'May',
+            'Jun',
+            'Jul',
+            'Aug',
+            'Sep',
+            'Oct',
+            'Nov',
+            'Dec'
+        ];
 
-    $months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
+        $result = [];
 
-    $result = [];
+        foreach ($months as $index => $month) {
+            $result[$month] = $data[$index + 1] ?? 0;
+        }
 
-    foreach ($months as $index => $month) {
-        $result[$month] = $data[$index + 1] ?? 0;
+        return $result;
     }
-
-    return $result;
-}
     public function index(Request $request): JsonResponse
     {
 
@@ -209,7 +229,9 @@ private function getPaymentsPerMonth($rentalIds, Carbon $date): array
                 'canceled' => (clone $rentalsQuery)->where('status', 'canceled')->count(),
             ],
             'cars' => [
-                'total' => Car::where('agency_id', $agencyId)->count(),
+                'total' => Car::where('agency_id', $agencyId)
+                    ->where('status', '!=', 'sold')
+                    ->count(),
                 'available' => Car::where('agency_id', $agencyId)->where('status', 'available')->count(),
                 'rented' => Car::where('agency_id', $agencyId)->where('status', 'rented')->count(),
                 'maintenance' => Car::where('agency_id', $agencyId)->where('status', 'maintenance')->count(),
