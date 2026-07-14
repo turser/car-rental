@@ -409,7 +409,7 @@ class RentalController extends Controller
                 // ── Client info ──
                 'client' => [
                     'id' => $rental->client->id,
-                    'name' => $rental->client->name,
+                    'name' => $rental->client->full_name,
                     'phone' => $rental->client->phone ?? null,
                     'email' => $rental->client->email ?? null,
                     'drivingLicenseExpiration' => $rental->client->driving_license_expiration,
