@@ -33,7 +33,7 @@ class RentalExtensionController extends Controller
     public function store(Request $request, Rental $rental): JsonResponse
     {
         $validated = $request->validate([
-            'newEndDate' => 'required|date|after:' . $rental->end_date,
+            'newEndDate' => 'required|date_format:Y-m-d H:i:s|after:' . $rental->end_date,
             'extendServices' => 'boolean',
         ]);
 

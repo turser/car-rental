@@ -21,6 +21,15 @@ class Rental extends Model
         'paid_amount',
         'status',
     ];
+
+    protected $casts = [
+        'start_date' => 'datetime', 
+        'end_date' => 'datetime', 
+        'actual_return_date' => 'datetime', 
+        'price_per_day' => 'decimal:2',
+        'total_price' => 'decimal:2',
+        'paid_amount' => 'decimal:2',
+    ];
     public function client()
     {
         return $this->belongsTo(Client::class);

@@ -31,6 +31,7 @@ class MaintenanceController extends Controller
                     'kilométrage' => $maintenance->mileage,
                     'cost' => $maintenance->cost,
                     'nextMaintenanceDate' => $maintenance->next_maintenance_date,
+                    'status'=>$maintenance->status
                 ];
             });
 

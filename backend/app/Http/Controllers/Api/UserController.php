@@ -18,8 +18,20 @@ class UserController extends Controller
      */
     public function index(): JsonResponse
     {
-        $users = User::where('agency_id', auth()->user()->agency_id)
-            ->select('id', 'name', 'email', 'role', 'created_at')
+        $authUser = auth()->user();
+
+        $users = User::where('agency_id', $authUser->agency_id)
+            ->when(
+                $authUser->isAdmin(),
+                fn($q) =>
+                $q->where('role', 'employee')
+            )
+            ->when(
+                $authUser->isOwner(),
+                fn($q) =>
+                $q->whereIn('role', ['admin', 'employee'])
+            )
+            ->select('id', 'name', 'email', 'role', 'is_active', 'created_at')
             ->latest()
             ->get();
 
@@ -27,6 +39,7 @@ class UserController extends Controller
             'success' => true,
             'data' => $users,
         ]);
+        ;
     }
 
     /**
@@ -37,22 +50,33 @@ class UserController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        $authUser = auth()->user();
+
+        // ============================================================
+        // Only owner can create users
+        // ============================================================
+        if (!$authUser->isOwner()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only the owner can create users.',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'role' => 'required|in:admin,employee',
+            'role' => 'required|in:admin,employee', 
         ]);
 
-        // Auto-generate a random password (8 characters)
-        $generatedPassword = \Str::random(8);
+        $generatedPassword = \Str::random(10);
 
-        // Force new user to belong to the same agency as the authenticated user
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($generatedPassword),
             'role' => $validated['role'],
-            'agency_id' => auth()->user()->agency_id,
+            'is_active' => true,
+            'agency_id' => $authUser->agency_id,
         ]);
 
         return response()->json([
@@ -63,6 +87,7 @@ class UserController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'role' => $user->role,
+                'isActive' => $user->is_active,
                 'agencyId' => $user->agency_id,
                 'generatedPassword' => $generatedPassword,
             ],
@@ -87,20 +112,35 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, User $user) : JsonResponse
+    public function update(Request $request, User $user): JsonResponse
     {
-        // Check user belongs to the authenticated user's agency
-        if ($user->agency_id !== auth()->user()->agency_id) {
+        $authUser = auth()->user();
+
+        // Check belongs to same agency
+        if ($user->agency_id !== $authUser->agency_id) {
             return response()->json([
                 'success' => false,
                 'message' => 'This user does not belong to your agency.',
             ], 403);
         }
 
+        // admin cannot update another admin or owner
+        if ($authUser->isAdmin() && !$user->isEmployee()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Admins can only update employees.',
+            ], 403);
+        }
+
         $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
+            'name'  => 'sometimes|string|max:255',
             'email' => 'sometimes|email|unique:users,email,' . $user->id,
-            'role' => 'sometimes|in:admin,employee',
+            'role'  => [
+                'sometimes',
+                $authUser->isOwner()
+                    ? 'in:admin,employee'
+                    : 'in:employee',
+            ],
         ]);
 
         $user->update($validated);
@@ -108,11 +148,12 @@ class UserController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'User updated successfully.',
-            'data' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $user->role,
+            'data'    => [
+                'id'       => $user->id,
+                'name'     => $user->name,
+                'email'    => $user->email,
+                'role'     => $user->role,
+                'isActive' => $user->is_active,
             ],
         ]);
     }
@@ -151,4 +192,51 @@ class UserController extends Controller
             'message' => 'Password reset successfully.',
         ]);
     }
+
+    public function toggleStatus(User $user): JsonResponse
+{
+    $authUser = auth()->user();
+
+    // Check belongs to same agency
+    if ($user->agency_id !== $authUser->agency_id) {
+        return response()->json([
+            'success' => false,
+            'message' => 'This user does not belong to your agency.',
+        ], 403);
+    }
+
+    // Only owner can toggle accounts
+    if (!$authUser->isOwner()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Only the owner can activate or suspend user accounts.',
+        ], 403);
+    }
+
+    // Owner cannot suspend himself
+    if ($user->id === $authUser->id) {
+        return response()->json([
+            'success' => false,
+            'message' => 'You cannot suspend your own account.',
+        ], 422);
+    }
+
+    // Toggle status
+    $user->update([
+        'is_active' => !$user->is_active,
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => $user->is_active
+            ? 'User account activated successfully.'
+            : 'User account suspended successfully.',
+        'data' => [
+            'id'       => $user->id,
+            'name'     => $user->name,
+            'role'     => $user->role,
+            'isActive' => $user->is_active,
+        ],
+    ]);
+}
 }

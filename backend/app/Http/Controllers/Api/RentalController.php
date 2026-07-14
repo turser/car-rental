@@ -117,11 +117,11 @@ class RentalController extends Controller
         $validated = $request->validate([
             'clientId' => 'required|exists:clients,id',
             'carId' => 'required|exists:cars,id',
-            'startDate' => 'required|date',
-            'expectedReturnDate' => 'required|date|after:startDate',
+            'startDate' => 'required|date_format:Y-m-d H:i:s',
+            'expectedReturnDate' => 'required|date_format:Y-m-d H:i:s|after:startDate',
             'pricePerDay' => 'nullable|numeric|min:0',
             'paidAmount' => 'nullable|numeric|min:0',
-            'paymentMethod' => 'required_with:paidAmount|in:cash,card,transfer', // ✅ أضفناه
+            'paymentMethod' => 'required_with:paidAmount|in:cash,card,transfer', 
             'services' => 'nullable|array',
             'services.*.serviceId' => 'required|exists:services,id',
             'services.*.quantity' => 'required|integer|min:1',
@@ -594,7 +594,7 @@ class RentalController extends Controller
         // 1. Validate incoming request data
         // ============================================================
         $validated = $request->validate([
-            'actualReturnDate' => 'required|date',
+            'actualReturnDate' => 'required|date_format:Y-m-d H:i:s',
             'finalPayment' => 'nullable|numeric|min:0',
             'paymentMethod' => 'required_with:finalPayment|in:cash,card,transfer',
         ]);

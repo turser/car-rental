@@ -45,9 +45,10 @@ Route::get('/test', function () {
 Route::post('/login', [AuthController::class, 'login']);
 
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum' , 'active'])->group(function () {
 
     Route::apiResource('users', UserController::class);
+    Route::get('user/{user}/toggleStatus',[UserController::class,'toggleStatus']);
     Route::patch('users/{user}/reset-password', [UserController::class,'resetPassword']);
     Route::get('/dashboard',[DashboardController::class,'index']);
     Route::get('/available', [DashboardController::class, 'availableCars']);
