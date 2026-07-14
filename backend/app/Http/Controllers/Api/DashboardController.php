@@ -48,19 +48,21 @@ class DashboardController extends Controller
         return $result;
     }
 
-    private function getPaymentsPerDay($rentalIds, Carbon $start, Carbon $end): array
+    private function getPaymentsPerDay(int $agencyId, Carbon $start, Carbon $end): array
     {
-        // Get payments total grouped by day
-        $data = Payment::whereIn('rental_id', $rentalIds)
+        $data = Payment::whereHas('rental', function ($query) use ($agencyId) {
+            $query->where('agency_id', $agencyId);
+        })
             ->whereBetween('payment_date', [$start, $end])
             ->selectRaw('DATE(payment_date) as day, SUM(amount) as total')
             ->groupBy('day')
             ->orderBy('day')
             ->get()
-            ->mapWithKeys(fn($p) => [$p->day => $p->total])
+            ->mapWithKeys(fn($payment) => [
+                $payment->day => (float) $payment->total
+            ])
             ->toArray();
 
-        // ✅ Fill missing days with 0
         $period = new \DatePeriod(
             $start,
             new \DateInterval('P1D'),
@@ -68,9 +70,10 @@ class DashboardController extends Controller
         );
 
         $result = [];
+
         foreach ($period as $date) {
             $day = $date->format('Y-m-d');
-            $result[$day] = $data[$day] ?? 0; // 0 if no payments that day
+            $result[$day] = $data[$day] ?? 0;
         }
 
         return $result;
@@ -96,15 +99,19 @@ class DashboardController extends Controller
         return $result;
     }
 
-    private function getPaymentsPerHour($rentalIds, Carbon $date): array
+    private function getPaymentsPerHour(int $agencyId, Carbon $date): array
     {
-        $data = Payment::whereIn('rental_id', $rentalIds)
+        $data = Payment::whereHas('rental', function ($query) use ($agencyId) {
+            $query->where('agency_id', $agencyId);
+        })
             ->whereDate('payment_date', $date)
-            ->selectRaw('HOUR(created_at) as hour, SUM(amount) as total')
+            ->selectRaw('HOUR(payment_date) as hour, SUM(amount) as total')
             ->groupBy('hour')
             ->orderBy('hour')
             ->get()
-            ->mapWithKeys(fn($p) => [(int) $p->hour => $p->total])
+            ->mapWithKeys(fn($payment) => [
+                (int) $payment->hour => (float) $payment->total
+            ])
             ->toArray();
 
         $result = [];
@@ -151,15 +158,19 @@ class DashboardController extends Controller
         return $result;
     }
 
-    private function getPaymentsPerMonth($rentalIds, Carbon $date): array
+    private function getPaymentsPerMonth(int $agencyId, Carbon $date): array
     {
-        $data = Payment::whereIn('rental_id', $rentalIds)
+        $data = Payment::whereHas('rental', function ($query) use ($agencyId) {
+            $query->where('agency_id', $agencyId);
+        })
             ->whereYear('payment_date', $date->year)
             ->selectRaw('MONTH(payment_date) as month, SUM(amount) as total')
             ->groupBy('month')
             ->orderBy('month')
             ->get()
-            ->mapWithKeys(fn($p) => [(int) $p->month => $p->total])
+            ->mapWithKeys(fn($payment) => [
+                (int) $payment->month => (float) $payment->total
+            ])
             ->toArray();
 
         $months = [
@@ -252,7 +263,9 @@ class DashboardController extends Controller
         // ============================================================
         $financialStats = [
             'totalRevenue' => (clone $rentalsQuery)->sum('total_price'),
-            'totalCollected' => Payment::whereIn('rental_id', $rentalIds)
+            'totalCollected' => Payment::whereHas('rental', function ($query) use ($agencyId) {
+                $query->where('agency_id', $agencyId);
+            })
                 ->whereBetween('payment_date', [$startDate, $endDate])
                 ->sum('amount'),
             'totalRemaining' => (clone $rentalsQuery)
@@ -260,12 +273,16 @@ class DashboardController extends Controller
                 ->value('remaining') ?? 0,
             'servicesRevenue' => \App\Models\RentalService::whereIn('rental_id', $rentalIds)
                 ->sum('total_price'),
-            'byPaymentMethod' => Payment::whereIn('rental_id', $rentalIds)
+            'byPaymentMethod' => Payment::whereHas('rental', function ($query) use ($agencyId) {
+                $query->where('agency_id', $agencyId);
+            })
                 ->whereBetween('payment_date', [$startDate, $endDate])
                 ->selectRaw('payment_method, SUM(amount) as total')
                 ->groupBy('payment_method')
                 ->get()
-                ->mapWithKeys(fn($p) => [$p->payment_method => $p->total]),
+                ->mapWithKeys(fn($payment) => [
+                    $payment->payment_method => (float) $payment->total
+                ]),
         ];
 
         // ============================================================
@@ -274,15 +291,15 @@ class DashboardController extends Controller
         $chartsData = match ($period) {
             'daily' => [
                 'rentals' => $this->getRentalsPerHour($agencyId, $date),
-                'payments' => $this->getPaymentsPerHour($rentalIds, $date),
+                'payments' => $this->getPaymentsPerHour($agencyId, $date),
             ],
             'monthly' => [
                 'rentals' => $this->getRentalsPerDay($agencyId, $startDate, $endDate),
-                'payments' => $this->getPaymentsPerDay($rentalIds, $startDate, $endDate),
+                'payments' => $this->getPaymentsPerDay($agencyId, $startDate, $endDate),
             ],
             'yearly' => [
                 'rentals' => $this->getRentalsPerMonth($agencyId, $date),
-                'payments' => $this->getPaymentsPerMonth($rentalIds, $date),
+                'payments' => $this->getPaymentsPerMonth($agencyId, $date),
             ],
         };
 
