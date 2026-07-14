@@ -451,7 +451,7 @@ class RentalController extends Controller
                 'services' => $rental->services->map(fn($s) => [
                     'id' => $s->id,
                     'name' => $s->name,
-                    'priceType' => $s->service->price_type,
+                    'priceType' => $s->price_type,
                     'quantity' => $s->quantity,
                     'unitPrice' => $s->unit_price,
                     'totalPrice' => $s->total_price,
