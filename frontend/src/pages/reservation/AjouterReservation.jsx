@@ -19,6 +19,15 @@ export default function AjouterReservation() {
     // on la complète pour qu'elle reste valide dans un input datetime-local.
     const toDateTimeLocal = (v) => (v && !v.includes('T')) ? `${v}T00:00` : (v || '');
 
+    // L'input datetime-local donne "YYYY-MM-DDTHH:mm" (parfois "YYYY-MM-DDTHH:mm:ss" selon le navigateur) ;
+    // l'API attend le format Y-m-d H:i:s (avec secondes, séparateur espace).
+    const toApiDateTime = (v) => {
+        if (!v) return v;
+        const [datePart, timePart = '00:00'] = v.split('T');
+        const time = timePart.length === 5 ? `${timePart}:00` : timePart;
+        return `${datePart} ${time}`;
+    };
+
     const [step, setStep] = useState(0);
     const [dates, setDates] = useState({
         startDate: toDateTimeLocal(location.state?.startDate),
@@ -146,8 +155,8 @@ export default function AjouterReservation() {
             const payload = {
                 clientId,
                 carId,
-                startDate: dates.startDate,
-                expectedReturnDate: dates.endDate,
+                startDate: toApiDateTime(dates.startDate),
+                expectedReturnDate: toApiDateTime(dates.endDate),
                 pricePerDay,
                 services: Object.keys(selectedServices).map(id => ({ serviceId: Number(id), quantity: 1 })),
             };

@@ -27,7 +27,7 @@ export default function ModifierUser() {
     const navigate = useNavigate();
     const { id } = useParams();
 
-    const [form, setForm] = useState({ name: '', email: '', role: 'employee' });
+    const [form, setForm] = useState({ name: '', email: '', role: 'employee', is_active: true });
     const [loading, setLoading]       = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError]           = useState('');
@@ -37,7 +37,7 @@ export default function ModifierUser() {
             .then(res => {
                 const found = extractList(res.data).find(u => String(u.id) === id);
                 if (!found) throw new Error();
-                setForm({ name: found.name, email: found.email, role: found.role });
+                setForm({ name: found.name, email: found.email, role: found.role, is_active: Boolean(found.is_active) });
             })
             .catch(() => setError('Utilisateur introuvable.'))
             .finally(() => setLoading(false));
@@ -126,7 +126,19 @@ export default function ModifierUser() {
                             >
                                 <option value="employee">Employé</option>
                                 <option value="admin">Administrateur</option>
+                                <option value="owner">Propriétaire</option>
                             </select>
+                        </Field>
+                        <Field label="Statut">
+                            <label className="flex items-center gap-2.5 h-full cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={form.is_active}
+                                    onChange={e => set('is_active', e.target.checked)}
+                                    className="w-4 h-4 accent-emerald-600 rounded-sm cursor-pointer"
+                                />
+                                <span className="text-sm text-stone-700">Compte actif</span>
+                            </label>
                         </Field>
                     </div>
                 </div>

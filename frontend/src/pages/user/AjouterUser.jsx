@@ -23,6 +23,7 @@ export default function AjouterUser() {
         name: '',
         email: '',
         role: 'employee',
+        is_active: true,
     });
     const [submitting, setSubmitting] = useState(false);
     const [error, setError]           = useState('');
@@ -175,7 +176,19 @@ export default function AjouterUser() {
                             >
                                 <option value="employee">Employé</option>
                                 <option value="admin">Administrateur</option>
+                                <option value="owner">Propriétaire</option>
                             </select>
+                        </Field>
+                        <Field label="Statut">
+                            <label className="flex items-center gap-2.5 h-full cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={form.is_active}
+                                    onChange={e => set('is_active', e.target.checked)}
+                                    className="w-4 h-4 accent-emerald-600 rounded-sm cursor-pointer"
+                                />
+                                <span className="text-sm text-stone-700">Compte actif</span>
+                            </label>
                         </Field>
                     </div>
                 </div>

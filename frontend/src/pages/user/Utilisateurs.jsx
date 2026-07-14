@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import api from '../../api/api';
 
 const fmtDate = d => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
 
-const ROLE_LABEL = { admin: 'Administrateur', agent: 'Agent', employee: 'Employé' };
+const ROLE_LABEL = { owner: 'Propriétaire', admin: 'Administrateur', agent: 'Agent', employee: 'Employé' };
 const ROLE_CLS = {
+    owner:    'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
     admin:    'bg-purple-50 text-purple-700 ring-1 ring-purple-200',
     agent:    'bg-stone-100 text-stone-600 ring-1 ring-stone-200',
     employee: 'bg-stone-100 text-stone-600 ring-1 ring-stone-200',
@@ -21,6 +23,8 @@ const extractList = data => {
 
 export default function Utilisateurs() {
     const navigate = useNavigate();
+    const currentRole = useSelector(state => state.auth.user?.role);
+    const canManage = currentRole === 'owner';
     const [users, setUsers]     = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError]     = useState('');
@@ -71,16 +75,18 @@ export default function Utilisateurs() {
                     <h1 className="text-xl font-semibold text-stone-900">Utilisateurs</h1>
                     <p className="text-sm text-stone-500 mt-0.5">{users.length} utilisateurs enregistrés</p>
                 </div>
-                <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.94 }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                    onClick={() => navigate('/utilisateurs/ajouter')}
-                    className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors shadow-sm"
-                >
-                    <i className="ti ti-plus text-[14px]" />
-                    Ajouter
-                </motion.button>
+                {canManage && (
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.94 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                        onClick={() => navigate('/utilisateurs/ajouter')}
+                        className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors shadow-sm"
+                    >
+                        <i className="ti ti-plus text-[14px]" />
+                        Ajouter
+                    </motion.button>
+                )}
             </div>
 
             {/* Search */}
@@ -105,7 +111,7 @@ export default function Utilisateurs() {
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="border-b border-stone-200 bg-stone-50">
-                                {['Utilisateur', 'Email', 'Rôle', 'Créé le', ''].map(h => (
+                                {['Utilisateur', 'Email', 'Rôle', 'Statut', 'Créé le', ''].map(h => (
                                     <th key={h} className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wider">{h}</th>
                                 ))}
                             </tr>
@@ -135,15 +141,25 @@ export default function Utilisateurs() {
                                                 {ROLE_LABEL[user.role] ?? user.role}
                                             </span>
                                         </td>
+                                        <td className="px-5 py-3.5">
+                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                                                user.is_active ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' : 'bg-red-50 text-red-600 ring-1 ring-red-200'
+                                            }`}>
+                                                <span className={`w-1.5 h-1.5 rounded-full ${user.is_active ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                                                {user.is_active ? 'Actif' : 'Inactif'}
+                                            </span>
+                                        </td>
                                         <td className="px-5 py-3.5 text-stone-600">{fmtDate(user.created_at)}</td>
                                         <td className="px-5 py-3.5 text-right">
-                                            <button
-                                                onClick={() => navigate(`/utilisateurs/${user.id}/modifier`)}
-                                                title="Modifier"
-                                                className="w-8 h-8 rounded-md border border-stone-200 text-stone-400 hover:text-emerald-600 hover:bg-emerald-50 hover:border-emerald-200 transition-colors inline-flex items-center justify-center"
-                                            >
-                                                <i className="ti ti-pencil text-[14px]" />
-                                            </button>
+                                            {canManage && (
+                                                <button
+                                                    onClick={() => navigate(`/utilisateurs/${user.id}/modifier`)}
+                                                    title="Modifier"
+                                                    className="w-8 h-8 rounded-md border border-stone-200 text-stone-400 hover:text-emerald-600 hover:bg-emerald-50 hover:border-emerald-200 transition-colors inline-flex items-center justify-center"
+                                                >
+                                                    <i className="ti ti-pencil text-[14px]" />
+                                                </button>
+                                            )}
                                         </td>
                                     </motion.tr>
                                 );

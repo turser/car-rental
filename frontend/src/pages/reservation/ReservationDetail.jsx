@@ -312,6 +312,7 @@ const PAYMENT_METHOD_LABEL = { cash: 'Espèces', card: 'Carte', transfer: 'Virem
 const PRICE_TYPE_LABEL = { fixed: 'Forfait', per_day: 'Par jour', per_km: 'Par km' };
 
 const fmtDate  = d => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
+const fmtDateTime = d => d ? new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 const fmtPrice = p => (p || p === 0) ? parseFloat(p).toLocaleString() + ' MAD' : '—';
 
 export default function ReservationDetail() {
@@ -670,19 +671,19 @@ export default function ReservationDetail() {
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
                             <div>
                                 <p className="text-xs text-stone-400">Début</p>
-                                <p className="text-stone-900 font-medium">{fmtDate(startDate)}</p>
+                                <p className="text-stone-900 font-medium">{fmtDateTime(startDate)}</p>
                             </div>
                             <div>
                                 <p className="text-xs text-stone-400">Fin prévue</p>
-                                <p className="text-stone-900 font-medium">{fmtDate(expectedEndDate)}</p>
+                                <p className="text-stone-900 font-medium">{fmtDateTime(expectedEndDate)}</p>
                             </div>
                             <div>
                                 <p className="text-xs text-stone-400">Fin réelle</p>
-                                <p className="text-stone-900 font-medium">{fmtDate(finalEndDate)}</p>
+                                <p className="text-stone-900 font-medium">{fmtDateTime(finalEndDate)}</p>
                             </div>
                             <div>
                                 <p className="text-xs text-stone-400">Retour effectif</p>
-                                <p className="text-stone-900 font-medium">{fmtDate(actualReturnDate)}</p>
+                                <p className="text-stone-900 font-medium">{fmtDateTime(actualReturnDate)}</p>
                             </div>
                         </div>
                         <div className="mt-4 pt-4 border-t border-stone-100 flex items-center justify-between text-sm">

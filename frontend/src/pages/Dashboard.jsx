@@ -9,6 +9,23 @@ const fmtPrice   = p => (p || p === 0) ? parseFloat(p).toLocaleString() + ' MAD'
 const fmtDay     = d => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : '—';
 const fmtDateFull = d => d ? new Date(d).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) : '—';
 
+const PERIOD_OPTIONS = [
+    { value: 'daily',   label: 'Jour' },
+    { value: 'monthly', label: 'Mois' },
+    { value: 'yearly',  label: 'Année' },
+];
+const PERIOD_TITLE = { daily: 'Activité du jour', monthly: 'Activité du mois', yearly: "Activité de l'année" };
+
+// Les clés des séries du graphique varient selon la période (heure/jour/mois) et leur format exact
+// dépend du backend ; on tente un parsing Date et on retombe sur la clé brute si ça échoue.
+const fmtChartLabel = (key, period) => {
+    const d = new Date(period === 'yearly' && /^\d+$/.test(key) ? `2000-${String(key).padStart(2, '0')}-01` : key);
+    if (isNaN(d)) return String(key);
+    if (period === 'daily') return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    if (period === 'yearly') return d.toLocaleDateString('fr-FR', { month: 'short' });
+    return fmtDay(key);
+};
+
 const SERIES = {
     Réservations: { stroke: '#059669', dot: '#059669' }, // emerald-600
     Paiements:    { stroke: '#2563eb', dot: '#2563eb' }, // blue-600
@@ -342,13 +359,16 @@ export default function Dashboard() {
     const [data, setData]       = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError]     = useState('');
+    const [period, setPeriod]   = useState('monthly');
+    const [date, setDate]       = useState(() => new Date().toISOString().slice(0, 10));
 
     useEffect(() => {
-        api.get('/dashboard')
+        setLoading(true);
+        api.get('/dashboard', { params: { period, date } })
             .then(res => setData(res.data?.data ?? res.data))
             .catch(() => setError('Erreur lors du chargement du tableau de bord.'))
             .finally(() => setLoading(false));
-    }, []);
+    }, [period, date]);
 
     if (loading) return (
         <div className="space-y-5">
@@ -371,10 +391,10 @@ export default function Dashboard() {
 
     const { general, financial, charts, latestRentals = [], alerts = {} } = data;
 
-    const chartData = Object.keys(charts?.rentals ?? {}).map(date => ({
-        date: fmtDay(date),
-        Réservations: charts.rentals[date],
-        Paiements: charts.payments?.[date] ?? 0,
+    const chartData = Object.keys(charts?.rentals ?? {}).map(key => ({
+        date: fmtChartLabel(key, period),
+        Réservations: charts.rentals[key],
+        Paiements: charts.payments?.[key] ?? 0,
     }));
     const tickInterval = Math.max(0, Math.ceil(chartData.length / 8) - 1);
 
@@ -398,19 +418,41 @@ export default function Dashboard() {
         <div className="max-w-7xl">
 
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
                 <div>
                     <h1 className="text-xl font-semibold text-stone-900">
                         Bonjour{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
                     </h1>
                     <p className="text-sm text-stone-500 mt-0.5 capitalize">{fmtDateFull(new Date())}</p>
                 </div>
-                {(data.from && data.to) && (
-                    <span className="hidden sm:inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-white border border-stone-200 text-stone-500 font-medium">
-                        <i className="ti ti-calendar text-[13px]" />
-                        {fmtDay(data.from)} → {fmtDay(data.to)}
-                    </span>
-                )}
+                <div className="flex items-center gap-3 flex-wrap">
+                    {(data.from && data.to) && (
+                        <span className="hidden sm:inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-white border border-stone-200 text-stone-500 font-medium">
+                            <i className="ti ti-calendar text-[13px]" />
+                            {fmtDay(data.from)} → {fmtDay(data.to)}
+                        </span>
+                    )}
+                    <input
+                        type="date"
+                        value={date}
+                        onChange={e => setDate(e.target.value)}
+                        className="bg-white border border-stone-200 text-stone-700 text-xs font-medium px-2.5 py-1.5 rounded-md focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition"
+                    />
+                    <div className="inline-flex rounded-md border border-stone-200 overflow-hidden bg-white">
+                        {PERIOD_OPTIONS.map(opt => (
+                            <button
+                                key={opt.value}
+                                type="button"
+                                onClick={() => setPeriod(opt.value)}
+                                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                                    period === opt.value ? 'bg-emerald-600 text-white' : 'text-stone-500 hover:bg-stone-50'
+                                }`}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
             </div>
 
             {/* KPIs */}
@@ -445,9 +487,9 @@ export default function Dashboard() {
                     transition={{ type: 'spring', stiffness: 260, damping: 22, delay: 0.1 }}
                     className="lg:col-span-2 bg-white border border-stone-200 rounded-2xl shadow-sm p-5"
                 >
-                    <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center justify-between mb-1 flex-wrap gap-3">
                         <h2 className="text-sm font-semibold text-stone-700 flex items-center gap-2">
-                            <i className="ti ti-chart-line text-emerald-500" /> Activité du mois
+                            <i className="ti ti-chart-line text-emerald-500" /> {PERIOD_TITLE[period]}
                         </h2>
                         <div className="flex items-center gap-4">
                             {Object.entries(SERIES).map(([name, c]) => (

@@ -5,8 +5,10 @@ import api from '../api/api';
 import { translateError, translateErrors } from '../utils/translateError';
 
 const ROLE = {
-    admin:   { label: 'Administrateur', cls: 'bg-violet-50 text-violet-700 border border-violet-100', icon: 'ti-shield-star' },
-    employe: { label: 'Employé',        cls: 'bg-indigo-50 text-indigo-700 border border-indigo-100', icon: 'ti-shield-check' },
+    owner:    { label: 'Propriétaire',   cls: 'bg-amber-50 text-amber-700 border border-amber-100',   icon: 'ti-crown' },
+    admin:    { label: 'Administrateur', cls: 'bg-violet-50 text-violet-700 border border-violet-100', icon: 'ti-shield-star' },
+    agent:    { label: 'Agent',          cls: 'bg-indigo-50 text-indigo-700 border border-indigo-100', icon: 'ti-shield-check' },
+    employee: { label: 'Employé',        cls: 'bg-indigo-50 text-indigo-700 border border-indigo-100', icon: 'ti-shield-check' },
 };
 
 const inputCls = 'w-full bg-white border border-stone-300 text-stone-900 placeholder-stone-400 px-3 py-2 rounded-md text-sm focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition';

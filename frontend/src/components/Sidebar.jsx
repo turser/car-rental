@@ -38,7 +38,7 @@ const sections = [
     {
         title: 'Autre',
         links: [
-            { to: '/utilisateurs', label: 'Utilisateurs', icon: 'ti-user-cog', roles: ['admin'] },
+            { to: '/utilisateurs', label: 'Utilisateurs', icon: 'ti-user-cog', roles: ['admin', 'owner'] },
             { to: '/profil',       label: 'Profil',       icon: 'ti-user' },
         ],
     },
