@@ -17,27 +17,28 @@ class MaintenanceController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function index(): JsonResponse
-    {
-        $Maintenance = Maintenance::with('car')
-            ->latest()
-            ->get()
-            ->map(function ($maintenance) {
+{
+    $maintenance = Maintenance::with('car')
+        ->whereHas('car', fn($q) =>
+            $q->where('agency_id', auth()->user()->agency_id)
+        )
+        ->latest()
+        ->get()
+        ->map(function ($maintenance) {
+            return [
+                'id' => $maintenance->id,
+                'carId' => $maintenance->car_id,
+                'maintenanceType' => $maintenance->type,
+                'maintenanceDate' => $maintenance->date,
+                'kilométrage' => $maintenance->mileage,
+                'cost' => $maintenance->cost,
+                'nextMaintenanceDate' => $maintenance->next_maintenance_date,
+                'status' => $maintenance->status
+            ];
+        });
 
-                return [
-                    'id' => $maintenance->id,
-                    'carId' => $maintenance->car_id,
-                    'maintenanceType' => $maintenance->type,
-                    'maintenanceDate' => $maintenance->date,
-                    'kilométrage' => $maintenance->mileage,
-                    'cost' => $maintenance->cost,
-                    'nextMaintenanceDate' => $maintenance->next_maintenance_date,
-                    'status'=>$maintenance->status
-                ];
-            });
-
-        return response()->json($Maintenance);
-    }
-
+    return response()->json($maintenance);
+}
     /**
      * Store a newly created resource in storage.
      *
