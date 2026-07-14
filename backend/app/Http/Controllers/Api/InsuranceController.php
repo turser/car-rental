@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Insurance;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class InsuranceController extends Controller
@@ -13,12 +14,17 @@ class InsuranceController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
-    {
-        $insurances = Insurance::with('car')->latest()->get();
+   public function index(): JsonResponse
+{
+    $insurances = Insurance::with('car')
+        ->whereHas('car', fn($q) =>
+            $q->where('agency_id', auth()->user()->agency_id)
+        )
+        ->latest()
+        ->get();
 
-        return response()->json($insurances);
-    }
+    return response()->json($insurances,);
+}
 
 
     /**
