@@ -65,7 +65,7 @@ class CarSaleController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        if (auth()->user()->role == 'employee') {
+        if (auth()->user()->role == 'employee' || auth()->user()->role == 'admin') {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized',
