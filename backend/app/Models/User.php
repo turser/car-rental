@@ -68,4 +68,9 @@ class User extends Authenticatable
     {
         return $this->is_active === true;
     }
+
+    public function agency()
+    {
+        return $this->belongsTo(Agency::class);
+    }
 }
