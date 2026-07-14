@@ -16,15 +16,35 @@ class ServiceSeeder extends Seeder
     public function run()
     {
         Service::create([
-            'name' => 'Car Delivery',
-            'price_type' => 'fixed',
-            'price' => 100
+            'name' => 'Chauffeur Service',
+            'price' => 250.00,
+            'price_type' => 'per_day'
         ]);
 
         Service::create([
-            'name' => 'Airport Return',
-            'price_type' => 'per_km',
-            'price' => 3
+            'name' => 'GPS Navigation System',
+            'price' => 30.00,
+            'price_type' => 'per_day'
+        ]);
+
+        Service::create([
+            'name' => 'Baby Car Seat',
+            'price' => 150.00,
+            'price_type' => 'fixed'
+        ]);
+
+        Service::create([
+            'name' => 'Airport Delivery & Pickup',
+            'price' => 200.00,
+            'price_type' => 'fixed'
+        ]);
+
+       
+
+        Service::create([
+            'name' => 'Extra Mileage Pack',
+            'price' => 2.50,
+            'price_type' => 'per_km'
         ]);
     }
 }

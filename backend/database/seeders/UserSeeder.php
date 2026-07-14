@@ -20,7 +20,7 @@ class UserSeeder extends Seeder
             'name' => 'yasser elkaddouri',
             'email' => 'elkaddouri@test.com',
             'password' => Hash::make('elkaddouri-2020'),
-            'role' => 'admin',
+            'role' => 'owner',
             'agency_id' => 1
         ]);
 
@@ -28,15 +28,23 @@ class UserSeeder extends Seeder
             'name' => 'hamza bouzekoura',
             'email' => 'bouzekoura@test.com',
             'password' => Hash::make('bouzekoura-2020'),
+            'role' => 'owner',
+            'agency_id' => 2
+        ]);
+
+         User::create([
+            'name' => 'yasser elkaddouri',
+            'email' => 'elkaddouri2020@test.com',
+            'password' => Hash::make('elkaddouri-2020'),
             'role' => 'admin',
-            'agency_id' => 1
+            'agency_id' => 2
         ]);
         User::create([
             'name' => 'amin kanafi',
             'email' => 'kanafi@test.com',
             'password' => Hash::make('kanafi-2020'),
             'role' => 'employee',
-            'agency_id' => 1
+            'agency_id' => 2
         ]);
     }
 }

@@ -18,17 +18,17 @@ class DatabaseSeeder extends Seeder
         // \App\Models\User::factory(10)->create();
 
         $this->call([
-            AgencySeeder::class,
-            UserSeeder::class,
+            //AgencySeeder::class,
+            //UserSeeder::class,
             //CarSeeder::class,
-            ClientSeeder::class,
+            //ClientSeeder::class,
             //RentalSeeder::class,
-            ServiceSeeder::class,
+            //ServiceSeeder::class,
             //RentalServiceSeeder::class,
             //PaymentSeeder::class,
-            //InsuranceSeeder::class,
+            InsuranceSeeder::class,
             //MaintenanceSeeder::class,
-            //TaxSeeder::class,
+            TaxSeeder::class,
             //CarImageSeeder::class,
         ]);
     }

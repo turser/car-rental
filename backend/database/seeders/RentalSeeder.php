@@ -2,7 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Payment;
 use App\Models\Rental;
+use Carbon\Carbon;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -13,57 +15,76 @@ class RentalSeeder extends Seeder
      *
      * @return void
      */
-    public function run()
+    public function run(): void
     {
-         Rental::create([
-            'client_id' => 1,
-            'car_id' => 1,
-            'agency_id' => 1,
+        $agencyId = 2;
 
-            'start_date' => '2026-05-01',
-            'end_date' => '2026-05-05',
-            'actual_return_date' => '2026-05-05',
+        $cars = Car::where('agency_id', $agencyId)->get();
 
-            'price_per_day' => 300,
+        $clients = Client::all();
 
-            'total_price' => 1500,
-            'paid_amount' => 1000,
+        if ($cars->isEmpty() || $clients->isEmpty()) {
+            $this->command->error('Cars or Clients not found.');
+            return;
+        }
 
-            'status' => 'completed',
-        ]);
+        foreach ($cars as $index => $car) {
 
-        Rental::create([
-            'client_id' => 2,
-            'car_id' => 2,
-            'agency_id' => 1,
+            $client = $clients[$index % $clients->count()];
 
-            'start_date' => '2026-05-10',
-            'end_date' => '2026-05-15',
-            'actual_return_date' => null,
+            $startDate = Carbon::create(2026, rand(1, 6), rand(1, 20));
 
-            'price_per_day' => 450,
+            $days = rand(5, 20);
 
-            'total_price' => 2250,
-            'paid_amount' => 1500,
+            $endDate = (clone $startDate)->addDays($days);
 
-            'status' => 'active',
-        ]);
+            $status = rand(0, 100) <= 80
+                ? 'completed'
+                : 'active';
 
-        Rental::create([
-            'client_id' => 3,
-            'car_id' => 3,
-            'agency_id' => 2,
+            $actualReturnDate = $status === 'completed'
+                ? (clone $endDate)
+                : null;
 
-            'start_date' => '2026-04-01',
-            'end_date' => '2026-04-03',
-            'actual_return_date' => '2026-04-05',
+            $totalPrice = $days * $car->daily_price;
 
-            'price_per_day' => 400,
+            $paidAmount = $status === 'completed'
+                ? $totalPrice
+                : round($totalPrice * 0.5);
 
-            'total_price' => 1600,
-            'paid_amount' => 1600,
+            $rental = Rental::create([
+                'client_id' => $client->id,
+                'car_id' => $car->id,
+                'agency_id' => $agencyId,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'actual_return_date' => $actualReturnDate,
+                'price_per_day' => $car->daily_price,
+                'total_price' => $totalPrice,
+                'paid_amount' => $paidAmount,
+                'status' => $status,
+            ]);
 
-            'status' => 'completed',
-        ]);
+            Payment::create([
+                'rental_id' => $rental->id,
+                'amount' => $paidAmount,
+                'payment_method' => collect([
+                    'cash',
+                    'card',
+                    'transfer'
+                ])->random(),
+                'payment_date' => $startDate,
+            ]);
+
+            if ($status === 'active') {
+                $car->update([
+                    'status' => 'rented'
+                ]);
+            } else {
+                $car->update([
+                    'status' => 'available'
+                ]);
+            }
+        }
     }
 }
