@@ -18,9 +18,9 @@ class AuthController extends Controller
         ]);
 
         // Find user
-$user = User::with('agency')
-    ->where('email', $request->email)
-    ->first();
+        $user = User::with('agency')
+            ->where('email', $request->email)
+            ->first();
         // Check password
         if (!$user || !Hash::check($request->password, $user->password)) {
 
@@ -59,6 +59,7 @@ $user = User::with('agency')
 
     public function me(Request $request)
     {
-        return response()->json($request->user());
+        $user = $request->user()->load('agency');
+        return response()->json($user);
     }
 }
