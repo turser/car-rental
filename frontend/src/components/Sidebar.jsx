@@ -69,20 +69,12 @@ export default function Sidebar() {
         <aside className="flex flex-col w-60 h-screen fixed inset-y-0 left-0 bg-black text-white overflow-hidden">
 
             {/* Logo */}
-            <div className="flex items-center gap-2.5 px-4 py-5 flex-shrink-0">
-                <motion.div
-                    whileHover={{ rotate: -12, scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 12 }}
-                    className="w-8 h-8 rounded-md bg-emerald-600 flex items-center justify-center text-white flex-shrink-0"
-                >
-                    <i className="ti ti-car text-[16px]" />
-                </motion.div>
-                <p className="font-bold text-white text-[15px] tracking-wide uppercase">CarRental</p>
+            <div className="flex items-center justify-center px-4 py-1 flex-shrink-0">
+                <img src="/Hayas-logo.png" alt="Hayas" className="h-16 w-auto object-contain" />
             </div>
 
             {/* Nav */}
-            <nav className="flex-1 px-3 pb-3 flex flex-col">
+            <nav className="flex-1 min-h-0 overflow-y-auto px-3 pb-3 flex flex-col">
                 {sections.map((section, i) => (
                     <div key={i}>
                         {section.title && (
@@ -137,7 +129,7 @@ export default function Sidebar() {
                     <button
                         onClick={handleLogout}
                         title="Déconnexion"
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-md text-sm font-medium text-white/60 hover:text-emerald-400 hover:bg-white/10 transition-colors"
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-md text-sm font-medium text-white/60 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                     >
                         <i className="ti ti-logout text-[15px]" />
                         Sortir

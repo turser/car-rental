@@ -34,7 +34,10 @@ export default function AjouterMaintenance() {
 
     useEffect(() => {
         api.get('/cars')
-            .then(res => setCars(Array.isArray(res.data) ? res.data : res.data?.data ?? []))
+            .then(res => {
+                const list = Array.isArray(res.data) ? res.data : res.data?.data ?? [];
+                setCars(list.filter(c => c.status === 'available'));
+            })
             .catch(() => {});
     }, []);
 
