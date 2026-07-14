@@ -1,5 +1,5 @@
 export const fmtMAD  = p => (p || p === 0) ? parseFloat(p).toLocaleString() + ' MAD' : '—';
-export const fmtDate = d => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
+export const fmtDate = d => d ? new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 
 export const FUEL_BADGE = {
     petrol:   { label: 'Essence',    cls: 'bg-blue-50 text-blue-700 ring-1 ring-blue-100' },

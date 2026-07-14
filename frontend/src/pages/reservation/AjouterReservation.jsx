@@ -15,10 +15,14 @@ export default function AjouterReservation() {
     const navigate = useNavigate();
     const location = useLocation();
 
+    // Le sélecteur de disponibilité du dashboard peut transmettre une date seule (sans heure) ;
+    // on la complète pour qu'elle reste valide dans un input datetime-local.
+    const toDateTimeLocal = (v) => (v && !v.includes('T')) ? `${v}T00:00` : (v || '');
+
     const [step, setStep] = useState(0);
     const [dates, setDates] = useState({
-        startDate: location.state?.startDate || '',
-        endDate: location.state?.expectedReturnDate || '',
+        startDate: toDateTimeLocal(location.state?.startDate),
+        endDate: toDateTimeLocal(location.state?.expectedReturnDate),
     });
     const [carId, setCarId] = useState(location.state?.carId ? String(location.state.carId) : '');
     const [cars, setCars] = useState([]);

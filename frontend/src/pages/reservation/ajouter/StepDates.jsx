@@ -11,14 +11,14 @@ export default function StepDates({ dates, setDate, cars, loadingCars, carId, on
                     <label className="block text-sm font-medium text-stone-700 mb-2">Date de début</label>
                     <div className="relative">
                         <i className="ti ti-calendar-event absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-[16px] pointer-events-none" />
-                        <input type="date" value={dates.startDate} onChange={e => setDate('startDate', e.target.value)} className={inputCls} />
+                        <input type="datetime-local" value={dates.startDate} onChange={e => setDate('startDate', e.target.value)} className={inputCls} />
                     </div>
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-stone-700 mb-2">Date de fin</label>
                     <div className="relative">
                         <i className="ti ti-calendar-event absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-[16px] pointer-events-none" />
-                        <input type="date" value={dates.endDate} onChange={e => setDate('endDate', e.target.value)} className={inputCls} />
+                        <input type="datetime-local" value={dates.endDate} onChange={e => setDate('endDate', e.target.value)} className={inputCls} />
                     </div>
                 </div>
             </div>
