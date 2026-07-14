@@ -316,7 +316,7 @@ class RentalController extends Controller
                     'totalPrice' => $rental->total_price,
                     'paidAmount' => $rental->paid_amount,
                     'status' => $rental->status,
-                    'services' => $rental->services()->with('service')->get(),
+                    'services' => $rental->services,
                 ],
             ], 201);
 
@@ -452,9 +452,9 @@ class RentalController extends Controller
                     'id' => $s->id,
                     'name' => $s->name,
                     'priceType' => $s->price_type,
-                    'quantity' => $s->quantity,
-                    'unitPrice' => $s->unit_price,
-                    'totalPrice' => $s->total_price,
+                    'quantity' => $s->pivot->quantity,
+                    'unitPrice' => $s->pivot->unit_price,
+                    'totalPrice' => $s->pivot->total_price,
                 ]),
 
                 // ── Extensions history ──
