@@ -314,7 +314,7 @@ class DashboardController extends Controller
             ->get()
             ->map(fn($r) => [
                 'id' => $r->id,
-                'client' => $r->client->nomComplet,
+                'client' => $r->client->full_name,
                 'car' => $r->car->brand . ' ' . $r->car->model,
                 'startDate' => $r->start_date,
                 'endDate' => $r->end_date,
