@@ -35,6 +35,8 @@ class UserController extends Controller
             ->latest()
             ->get();
 
+
+    
         return response()->json([
             'success' => true,
             'data' => $users,

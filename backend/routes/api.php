@@ -32,16 +32,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 
-Route::get('/test', function () {
-    return response()->json([
-        'status' => 'success',
-        'message' => 'Car Rental API is working!',
-        'data' => [
-            'app' => 'Car Rental',
-            'version' => '1.0.0',
-        ]
-    ]);
-});
 Route::post('/login', [AuthController::class, 'login']);
 
 

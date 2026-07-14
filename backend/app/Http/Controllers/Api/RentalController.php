@@ -111,9 +111,7 @@ class RentalController extends Controller
     }
     public function store(Request $request): JsonResponse
     {
-        // ============================================================
-        // 1. Validate incoming request data
-        // ============================================================
+
         $validated = $request->validate([
             'clientId' => 'required|exists:clients,id',
             'carId' => 'required|exists:cars,id',
@@ -121,7 +119,7 @@ class RentalController extends Controller
             'expectedReturnDate' => 'required|date_format:Y-m-d H:i:s|after:startDate',
             'pricePerDay' => 'nullable|numeric|min:0',
             'paidAmount' => 'nullable|numeric|min:0',
-            'paymentMethod' => 'required_with:paidAmount|in:cash,card,transfer', 
+            'paymentMethod' => 'required_with:paidAmount|in:cash,card,transfer',
             'services' => 'nullable|array',
             'services.*.serviceId' => 'required|exists:services,id',
             'services.*.quantity' => 'required|integer|min:1',
@@ -362,7 +360,7 @@ class RentalController extends Controller
             'client',
             'car.images',
             'agency',
-            'services.service',
+            'services',
             'payments',
             'extensions',
         ]);
@@ -478,28 +476,8 @@ class RentalController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
-    }
+
 
     public function addPayment(Request $request, Rental $rental): JsonResponse
     {
