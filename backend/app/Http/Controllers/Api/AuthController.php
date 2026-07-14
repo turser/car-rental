@@ -18,8 +18,9 @@ class AuthController extends Controller
         ]);
 
         // Find user
-        $user = User::where('email', $request->email)->first();
-
+$user = User::with('agency')
+    ->where('email', $request->email)
+    ->first();
         // Check password
         if (!$user || !Hash::check($request->password, $user->password)) {
 
@@ -31,6 +32,8 @@ class AuthController extends Controller
         // Create token
         $token = $user->createToken('api-token')->plainTextToken;
 
+
+
         return response()->json([
             'token' => $token,
 
@@ -40,6 +43,7 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'role' => $user->role,
                 'agency_id' => $user->agency_id,
+                'agencyName' => $user->agencyName,
             ]
         ]);
     }
@@ -56,5 +60,5 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         return response()->json($request->user());
-    }    
+    }
 }
