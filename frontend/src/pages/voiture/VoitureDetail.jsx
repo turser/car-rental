@@ -438,7 +438,7 @@ export default function VoitureDetail() {
         { label: 'Prix / jour',     value: fmtPrice(car.daily_price),             icon: 'ti-cash' },
         { label: "Prix d'achat",    value: fmtPrice(car.purchase_price),          icon: 'ti-receipt' },
         { label: "Date d'achat",    value: fmtDate(car.purchase_date),            icon: 'ti-calendar' },
-        { label: 'Agence',          value: '#' + car.agency_id,                   icon: 'ti-building' },
+        { label: 'Agence',          value: car.agency.name,                   icon: 'ti-building' },
         { label: 'Ajouté le',       value: fmtDate(car.created_at),               icon: 'ti-clock' },
     ];
 
