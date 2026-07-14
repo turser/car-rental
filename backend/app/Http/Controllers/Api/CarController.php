@@ -144,7 +144,9 @@ class CarController extends Controller
             'insurances',
             'maintenances',
             'taxes',
-            'rentals'
+            'rentals',
+            'agency'
+            
         ]);
 
         return response()->json($car);
